@@ -187,10 +187,11 @@ export function Settings({ onNavigate, settings, onUpdateSettings, profile, onUp
                   <div className="sc-h">Display</div>
                   <div className="sc-b">
                     <div className="sc-r">
-                      <div><div className="rl">Theme</div><div className="rd">Choose visual theme</div></div>
+                      <div><div className="rl">Theme</div><div className="rd">Dark, Light, or Glass Liquid (Clear Sky)</div></div>
                       <div className="th-sw">
-                        <div className={`th-s dk${settings.theme === 'dark' ? ' sel' : ''}`} onClick={() => setTheme('dark')}></div>
-                        <div className={`th-s lt${settings.theme === 'light' ? ' sel' : ''}`} onClick={() => setTheme('light')}></div>
+                        <div className={`th-s dk${settings.theme === 'dark' ? ' sel' : ''}`} title="Dark" onClick={() => setTheme('dark')}></div>
+                        <div className={`th-s lt${settings.theme === 'light' ? ' sel' : ''}`} title="Light" onClick={() => setTheme('light')}></div>
+                        <div className={`th-s gl${settings.theme === 'glass' ? ' sel' : ''}`} title="Glass Liquid" onClick={() => setTheme('glass')}></div>
                       </div>
                     </div>
                   </div>

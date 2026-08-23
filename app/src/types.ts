@@ -12,7 +12,7 @@ export type Screen =
   | 'settings'
   | 'about';
 
-export type Theme = 'dark' | 'light';
+export type Theme = 'dark' | 'light' | 'glass';
 
 export interface SteamFriend {
   steamId: string;

@@ -123,7 +123,8 @@ export default function App() {
     }
   }, [call.phase, call.incoming]);
 
-  const toggleTheme = () => updateSettings({ theme: settings.theme === 'dark' ? 'light' : 'dark' });
+  const THEME_CYCLE: Record<typeof settings.theme, typeof settings.theme> = { dark: 'light', light: 'glass', glass: 'dark' };
+  const toggleTheme = () => updateSettings({ theme: THEME_CYCLE[settings.theme] });
 
   const startCall = (targets: SteamFriend[]) => {
     // Group calling isn't wired up yet (Phase 2) — this session is 1:1 only.

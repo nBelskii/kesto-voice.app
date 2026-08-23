@@ -1,5 +1,8 @@
-import { LayoutDashboard, Users, UsersRound, Settings as SettingsIcon, Info, SunMedium, Moon } from 'lucide-react';
+import { LayoutDashboard, Users, UsersRound, Settings as SettingsIcon, Info, SunMedium, Moon, Droplets } from 'lucide-react';
 import type { Screen, Theme } from '../types';
+
+// Toggle cycles dark -> light -> glass -> dark; icon shows where clicking takes you.
+const NEXT_THEME_ICON: Record<Theme, typeof SunMedium> = { dark: SunMedium, light: Droplets, glass: Moon };
 
 interface Props {
   active: Screen;
@@ -39,8 +42,8 @@ export function Sidebar({ active, onNavigate, theme, onToggleTheme }: Props) {
         })}
       </div>
       <div className="sbot">
-        <button className="tbtn" onClick={onToggleTheme}>
-          {theme === 'dark' ? <SunMedium size={14} /> : <Moon size={14} />}
+        <button className="tbtn" onClick={onToggleTheme} title="Switch theme">
+          {(() => { const NextIcon = NEXT_THEME_ICON[theme]; return <NextIcon size={14} />; })()}
         </button>
         <div className="sdot" title="Online"></div>
       </div>
