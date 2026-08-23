@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1200">
+<title>Kesto — Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --accent:#10b981; --accent-hover:#059669; --accent-soft:rgba(16,185,129,0.12);
+    --accent-glow:rgba(16,185,129,0.3); --accent-border:rgba(16,185,129,0.25);
+    --accent2:#06b6d4; --gradient:linear-gradient(135deg, #10b981, #06b6d4);
+    --red:#ef4444; --red-soft:rgba(239,68,68,0.12); --yellow:#eab308; --yellow-soft:rgba(234,179,8,0.12);
+    --radius-xs:6px; --radius-sm:8px; --radius-md:10px; --radius-lg:14px; --radius-xl:18px; --radius-full:9999px;
+    --font-head:'Rajdhani','Segoe UI',sans-serif;
+    --font-body:'Space Grotesk','Segoe UI',sans-serif;
+    --font-mono:'JetBrains Mono','Cascadia Code','Consolas',monospace;
+    --ease:0.2s ease;
+  }
+  [data-theme="dark"] {
+    --bg-app:#06060a; --bg-sidebar:#0a0a10; --bg-card:#0f0f18; --bg-card-hover:#161624;
+    --bg-input:#121220; --bg-elevated:#181828; --bg-overlay:rgba(0,0,0,0.8);
+    --text-1:#e8e8f0; --text-2:#8888a0; --text-3:#4a4a60;
+    --border:rgba(255,255,255,0.06); --border-h:rgba(255,255,255,0.1);
+    --glow:0 0 20px var(--accent-glow); --shadow:0 2px 8px rgba(0,0,0,0.5);
+  }
+  [data-theme="light"] {
+    --bg-app:#f2f2f6; --bg-sidebar:#ffffff; --bg-card:#ffffff; --bg-card-hover:#f6f6fa;
+    --bg-input:#eeeef4; --bg-elevated:#ffffff; --bg-overlay:rgba(0,0,0,0.45);
+    --text-1:#0a0a12; --text-2:#6666780; --text-3:#9999aa;
+    --border:rgba(0,0,0,0.07); --border-h:rgba(0,0,0,0.12);
+    --glow:0 0 16px rgba(16,185,129,0.15); --shadow:0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  html, body { height:100%; background:var(--bg-app); color:var(--text-1); font-family:var(--font-body); font-size:14px; line-height:1.5; transition:background var(--ease), color var(--ease); }
+  button { font-family:var(--font-body); cursor:pointer; transition:all var(--ease); }
+  input, select { font-family:var(--font-mono); }
+  ::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-track { background:transparent; } ::-webkit-scrollbar-thumb { background:#222; border-radius:3px; }
+  h1,h2,h3 { font-family:var(--font-head); }
+
+  /* ─── SCREEN NAV ─── */
+  .snav { position:fixed;top:0;left:0;right:0;z-index:1000;background:var(--bg-sidebar);border-bottom:1px solid var(--border);display:flex;align-items:center;height:34px;padding:0 10px;gap:1px; }
+  .snav span { font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);margin-right:8px; }
+  .snav button { background:none;border:none;color:var(--text-3);font-size:10px;font-weight:600;padding:7px 10px;border-radius:var(--radius-sm);font-family:var(--font-head);letter-spacing:0.5px; }
+  .snav button:hover { color:var(--text-1);background:var(--bg-card); }
+  .snav button.on { color:var(--accent);background:var(--accent-soft); }
+
+  /* ─── LAYOUT ─── */
+  .frame { display:none;margin-top:34px;height:calc(100vh - 34px); }
+  .frame.on { display:flex; }
+
+  .side { width:64px;min-width:64px;background:var(--bg-sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:14px 0 10px;gap:2px;transition:background var(--ease); }
+  .side .logo { width:38px;height:38px;background:var(--gradient);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:18px;font-weight:700;color:#fff;margin-bottom:14px;box-shadow:var(--glow); }
+  .side .icons { flex:1;display:flex;flex-direction:column;gap:2px;width:100%;padding:0 8px; }
+  .ni { width:48px;height:40px;border:none;background:none;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:17px;position:relative; }
+  .ni:hover { background:var(--bg-card);color:var(--text-2); }
+  .ni.on { background:var(--accent-soft);color:var(--accent); }
+  .ni .tip { display:none;position:absolute;left:54px;top:50%;transform:translateY(-50%);background:var(--bg-elevated);color:var(--text-1);font-size:11px;font-weight:600;padding:5px 10px;border-radius:var(--radius-sm);white-space:nowrap;box-shadow:var(--shadow);border:1px solid var(--border);z-index:10;font-family:var(--font-body); }
+  .ni:hover .tip { display:block; }
+  .side .sbot { display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:8px;border-top:1px solid var(--border);width:44px; }
+  .tbtn { width:32px;height:32px;border:none;background:var(--bg-card);border-radius:var(--radius-full);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text-2); }
+  .tbtn:hover { background:var(--bg-card-hover);color:var(--text-1); }
+  .sdot { width:8px;height:8px;background:var(--accent);border-radius:var(--radius-full);box-shadow:0 0 8px rgba(16,185,129,0.5); }
+
+  .cnt { flex:1;overflow-y:auto;display:flex;flex-direction:column; }
+  .cnt-h { padding:22px 28px 0;flex-shrink:0; }
+  .cnt-h h1 { font-size:22px;font-weight:700;letter-spacing:1px; }
+  .cnt-h .sub { font-size:11px;color:var(--text-3);margin-top:1px;font-family:var(--font-body); }
+  .cnt-b { padding:16px 28px 28px;flex:1; }
+
+  /* ─── BUTTONS ─── */
+  .btn { background:var(--accent);color:#fff;border:none;padding:7px 20px;font-size:12px;font-weight:600;border-radius:var(--radius-full);font-family:var(--font-head);letter-spacing:0.5px; }
+  .btn:hover { background:var(--accent-hover);box-shadow:var(--glow); }
+  .btn.dis { opacity:0.2;pointer-events:none; }
+  .btn-o { background:none;border:1px solid var(--border);color:var(--text-3);padding:6px 14px;font-size:12px;font-weight:600;border-radius:var(--radius-full);font-family:var(--font-head); }
+  .btn-o:hover { border-color:var(--red);color:var(--red); }
+  .btn-d { background:none;border:1px solid rgba(239,68,68,0.2);color:var(--red);padding:7px 18px;font-size:12px;font-weight:600;border-radius:var(--radius-full); }
+  .btn-d:hover { background:var(--red-soft);border-color:var(--red); }
+  .btn-g { background:none;border:1px solid var(--border);color:var(--text-3);padding:6px 16px;font-size:12px;font-weight:600;border-radius:var(--radius-full); }
+  .btn-g:hover { border-color:var(--accent);color:var(--accent); }
+  .btn-big { padding:14px 44px;font-size:15px;font-weight:700;letter-spacing:1px; }
+
+  /* ─── CARDS ─── */
+  .card { background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);transition:all var(--ease);overflow:hidden; }
+  .card:hover { border-color:var(--border-h);box-shadow:var(--shadow); }
+  .card-h { padding:14px 18px;border-bottom:1px solid var(--border);font-family:var(--font-head);font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);display:flex;justify-content:space-between;align-items:center; }
+
+  /* ─── SIDEBAR HELPER (generates sidebar for each screen) ─── */
+
+  /* ═══════ 0. LOGIN ═══════ */
+  .login-bg { display:none;margin-top:34px;height:calc(100vh - 34px);background:var(--bg-app);align-items:center;justify-content:center;flex-direction:column;gap:24px; }
+  .login-bg.on { display:flex; }
+  .login-card { background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:48px 52px;text-align:center;min-width:400px;box-shadow:0 8px 40px rgba(0,0,0,0.5); }
+  .login-logo { font-family:var(--font-head);font-size:48px;font-weight:700;letter-spacing:8px;text-transform:uppercase;margin-bottom:4px; }
+  .login-logo em { font-style:normal;color:var(--accent); }
+  .login-sub { font-size:13px;color:var(--text-3);margin-bottom:32px; }
+  .login-steam { display:inline-flex;align-items:center;gap:10px;background:#171a21;color:#c6d4df;border:none;padding:14px 36px;font-size:14px;font-weight:700;border-radius:var(--radius-md);font-family:var(--font-head);letter-spacing:1px;cursor:pointer;transition:all var(--ease); }
+  .login-steam:hover { background:#1b2838;box-shadow:0 0 20px rgba(102,192,244,0.15); }
+  .login-note { font-size:11px;color:var(--text-3);margin-top:20px; }
+
+  /* ═══════ 0b. WELCOME ═══════ */
+  .welcome-bg { display:none;margin-top:34px;height:calc(100vh - 34px);background:var(--bg-app);align-items:center;justify-content:center;flex-direction:column; }
+  .welcome-bg.on { display:flex; }
+  .welcome-card { text-align:center;max-width:520px;padding:40px; }
+  .welcome-icon { width:72px;height:72px;background:var(--gradient);border-radius:var(--radius-xl);display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:30px;font-weight:700;color:#fff;margin:0 auto 24px;box-shadow:var(--glow); }
+  .welcome-title { font-family:var(--font-head);font-size:28px;font-weight:700;letter-spacing:1px;margin-bottom:8px; }
+  .welcome-desc { font-size:14px;color:var(--text-2);line-height:1.7;margin-bottom:32px; }
+  .welcome-steps { display:flex;gap:16px;margin-bottom:32px;text-align:center; }
+  .welcome-step { flex:1;padding:20px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg); }
+  .welcome-step .ws-num { font-family:var(--font-head);font-size:24px;font-weight:700;color:var(--accent);margin-bottom:6px; }
+  .welcome-step .ws-text { font-size:12px;color:var(--text-2);line-height:1.4; }
+
+  /* ═══════ DASHBOARD ═══════ */
+  .bento { display:grid;grid-template-columns:repeat(12,1fr);gap:10px; }
+  .b-profile { grid-column:span 5;display:flex;align-items:center;gap:16px;padding:20px; }
+  .b-av { width:52px;height:52px;background:var(--gradient);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:20px;font-weight:700;color:#fff;flex-shrink:0;box-shadow:var(--glow); }
+  .b-name { font-family:var(--font-head);font-size:17px;font-weight:700;letter-spacing:0.5px; }
+  .b-id { font-family:var(--font-mono);font-size:10px;color:var(--text-3);margin-top:1px; }
+  .b-status { display:inline-flex;align-items:center;gap:5px;margin-top:5px;font-size:10px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:3px 9px;border-radius:var(--radius-full); }
+  .b-dot { width:5px;height:5px;background:var(--accent);border-radius:var(--radius-full); }
+  .b-stat { grid-column:span 2;text-align:center;padding:16px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center; }
+  .b-stat:hover { border-color:var(--accent-border); }
+  .b-val { font-family:var(--font-mono);font-size:26px;font-weight:700;color:var(--accent);line-height:1; }
+  .b-label { font-family:var(--font-head);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-3);margin-top:5px; }
+  .b-activity { grid-column:span 7;padding:0; }
+  .ai { display:flex;align-items:center;gap:11px;padding:11px 16px;border-bottom:1px solid var(--border);transition:background var(--ease); }
+  .ai:last-child { border-bottom:none; }
+  .ai:hover { background:var(--bg-card-hover); }
+  .ai-i { width:28px;height:28px;background:var(--accent-soft);border-radius:var(--radius-xs);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--accent);flex-shrink:0; }
+  .ai-n { font-size:13px;font-weight:600;flex:1; }
+  .ai-m { font-family:var(--font-mono);font-size:10px;color:var(--text-3); }
+  .ai-q { font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--radius-full); }
+  .ai-q.ex { background:rgba(16,185,129,0.1);color:var(--accent); }
+  .ai-q.gd { background:rgba(16,185,129,0.08);color:#34d399; }
+  .ai-q.fr { background:var(--yellow-soft);color:var(--yellow); }
+  .b-quick { grid-column:span 5;padding:0; }
+  .qi { display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius-md);transition:background var(--ease); }
+  .qi:hover { background:var(--bg-card-hover); }
+  .qi-av { width:34px;height:34px;background:var(--bg-input);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text-3);position:relative; }
+  .qi-d { position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border:2px solid var(--bg-card);border-radius:var(--radius-full); }
+  .qi-d.on { background:var(--accent); }
+  .qi-d.off { background:var(--text-3); }
+  .qi-info { flex:1; }
+  .qi-info b { font-size:12px;font-weight:600;display:block; }
+  .qi-info small { font-size:10px;color:var(--text-3); }
+
+  /* ═══════ FRIENDS ═══════ */
+  .ftool { display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap; }
+  .finput { flex:1;min-width:180px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-full);padding:8px 14px;font-size:12px;color:var(--text-1);outline:none;font-family:var(--font-body);transition:all var(--ease); }
+  .finput::placeholder { color:var(--text-3); }
+  .finput:focus { border-color:var(--accent-border);box-shadow:0 0 0 3px var(--accent-soft); }
+  .pills { display:flex;gap:5px; }
+  .pill { background:var(--bg-card);border:1px solid var(--border);color:var(--text-3);padding:6px 12px;font-size:11px;font-weight:600;border-radius:var(--radius-full);font-family:var(--font-head); }
+  .pill:hover { background:var(--bg-card-hover);color:var(--text-2); }
+  .pill.on { background:var(--accent);color:#fff;border-color:var(--accent); }
+  .fgrid { display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px; }
+  .fc { padding:14px;display:flex;align-items:center;gap:10px; }
+  .fc.nk { opacity:0.35; }
+  .fc.ofl { opacity:0.4; }
+  .fchk { width:16px;height:16px;border:1.5px solid var(--text-3);background:transparent;appearance:none;-webkit-appearance:none;border-radius:5px;cursor:pointer;flex-shrink:0;position:relative;transition:all var(--ease); }
+  .fchk:checked { background:var(--accent);border-color:var(--accent); }
+  .fchk:checked::after { content:'✓';position:absolute;top:-1px;left:2px;font-size:11px;font-weight:700;color:#fff; }
+  .fchk:disabled { opacity:0.15;cursor:not-allowed; }
+  .f-av { width:36px;height:36px;background:var(--bg-input);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--text-3);flex-shrink:0;position:relative; }
+  .f-pr { position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border:2px solid var(--bg-card);border-radius:var(--radius-full); }
+  .f-pr.on { background:var(--accent); }
+  .f-pr.aw { background:var(--yellow); }
+  .f-pr.off { background:var(--text-3); }
+  .f-info { flex:1;min-width:0; }
+  .f-info b { font-size:13px;font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+  .f-info small { font-size:10px;color:var(--text-3); }
+  .f-badge { font-size:9px;font-weight:600;color:var(--text-3);background:var(--bg-input);padding:2px 8px;border-radius:var(--radius-full); }
+  .fbar { position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-full);padding:8px 8px 8px 22px;display:flex;align-items:center;gap:14px;box-shadow:0 8px 32px rgba(0,0,0,0.5);z-index:200;backdrop-filter:blur(16px); }
+  .fbar span { font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap; }
+
+  /* ═══════ GROUPS ═══════ */
+  .gc { margin-bottom:8px; }
+  .gc-m { display:flex;align-items:center;gap:12px;padding:14px 18px; }
+  .gc-i { width:40px;height:40px;background:var(--gradient);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:14px;font-weight:700;color:#fff;flex-shrink:0; }
+  .gc-info { flex:1;min-width:0; }
+  .gc-info b { font-family:var(--font-head);font-size:14px;font-weight:700;display:block; }
+  .gc-info small { font-size:11px;color:var(--text-3);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+  .gc-meta { display:flex;gap:14px;font-family:var(--font-mono);font-size:10px;color:var(--text-3);flex-shrink:0; }
+  .gc-stats { display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--border); }
+  .gc-s { padding:10px 14px;text-align:center;border-right:1px solid var(--border); }
+  .gc-s:last-child { border-right:none; }
+  .gc-s .v { font-family:var(--font-mono);font-size:15px;font-weight:700;color:var(--accent); }
+  .gc-s .l { font-family:var(--font-head);font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.3px;margin-top:2px; }
+
+  /* ═══════ RINGING ═══════ */
+  .ring-bg { display:none;margin-top:34px;height:calc(100vh - 34px);background:var(--bg-app);align-items:center;justify-content:center; }
+  .ring-bg.on { display:flex; }
+  .ring-card { text-align:center;padding:48px; }
+  .ring-av { width:96px;height:96px;background:var(--gradient);border-radius:var(--radius-full);display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:36px;font-weight:700;color:#fff;margin:0 auto 20px;animation:ring-pulse 2s ease-in-out infinite; }
+  @keyframes ring-pulse { 0%,100%{box-shadow:0 0 0 0 var(--accent-glow),var(--glow)} 50%{box-shadow:0 0 0 20px transparent,0 0 40px var(--accent-glow)} }
+  .ring-label { font-family:var(--font-head);font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:16px; }
+  .ring-name { font-family:var(--font-head);font-size:24px;font-weight:700;margin-bottom:6px; }
+  .ring-sub { font-family:var(--font-mono);font-size:12px;color:var(--text-3);margin-bottom:32px; }
+  .ring-dots { display:flex;justify-content:center;gap:6px;margin-bottom:32px; }
+  .ring-dots span { width:8px;height:8px;background:var(--accent);border-radius:var(--radius-full);animation:dot-bounce 1.4s ease-in-out infinite; }
+  .ring-dots span:nth-child(2) { animation-delay:0.2s; }
+  .ring-dots span:nth-child(3) { animation-delay:0.4s; }
+  @keyframes dot-bounce { 0%,80%,100%{opacity:0.3;transform:scale(0.8)} 40%{opacity:1;transform:scale(1.2)} }
+
+  /* ═══════ ACTIVE CALL ═══════ */
+  .call-f { display:none;flex-direction:column;height:calc(100vh - 34px);margin-top:34px;background:var(--bg-app); }
+  .call-f.on { display:flex; }
+  .ct { display:flex;align-items:center;justify-content:space-between;padding:12px 22px;background:var(--bg-sidebar);border-bottom:1px solid var(--border); }
+  .ct-l { display:flex;align-items:center;gap:12px; }
+  .ct-timer { font-family:var(--font-mono);font-size:17px;font-weight:700;color:var(--accent); }
+  .ct-gn { font-family:var(--font-head);font-size:13px;font-weight:600;color:var(--text-2); }
+  .ct-r { display:flex;align-items:center;gap:12px; }
+  .qbars { display:flex;align-items:flex-end;gap:2px;height:14px; }
+  .qbars i { width:3px;background:var(--accent);border-radius:1px;display:block;font-style:normal; }
+  .qbars i:nth-child(1){height:3px} .qbars i:nth-child(2){height:6px} .qbars i:nth-child(3){height:10px} .qbars i:nth-child(4){height:14px}
+  .ct-p { font-family:var(--font-mono);font-size:11px;color:var(--text-3); }
+  .cg { flex:1;display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:8px;overflow:hidden; }
+  .ctile { background:var(--bg-card);border:2px solid var(--border);border-radius:var(--radius-xl);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;position:relative;transition:all var(--ease); }
+  .ctile.speak { border-color:var(--accent);box-shadow:var(--glow); }
+  .ctile-av { width:64px;height:64px;background:var(--bg-input);border-radius:var(--radius-full);display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:24px;font-weight:700;color:var(--text-3);border:2px solid transparent;transition:all var(--ease); }
+  .ctile.speak .ctile-av { border-color:var(--accent);box-shadow:0 0 16px var(--accent-glow);background:var(--accent-soft); }
+  .ctile-n { font-family:var(--font-head);font-size:13px;font-weight:600; }
+  .ctile-s { font-size:10px;font-weight:600;color:var(--accent); }
+  .ctile-mute { position:absolute;top:10px;right:10px;background:var(--bg-overlay);backdrop-filter:blur(8px);padding:3px 9px;border-radius:var(--radius-full);font-size:9px;font-weight:600;color:var(--text-3); }
+  .cbar { display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 20px;background:var(--bg-sidebar);border-top:1px solid var(--border); }
+  .cbtn { display:flex;align-items:center;justify-content:center;gap:5px;padding:10px 18px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-full);color:var(--text-2);font-size:11px;font-weight:600;font-family:var(--font-head); }
+  .cbtn:hover { background:var(--bg-card-hover);color:var(--text-1); }
+  .cbtn.tog { background:var(--accent-soft);color:var(--accent);border-color:var(--accent-border); }
+  .cbtn.end { background:var(--red);color:#fff;border-color:var(--red);padding:10px 26px; }
+  .cbtn.end:hover { background:#dc2626;box-shadow:0 0 16px rgba(239,68,68,0.3); }
+  .cbtn .ci { font-size:16px; }
+
+  /* ═══════ SCREEN SHARE VIEW ═══════ */
+  .ss-view { display:none;flex-direction:column;height:calc(100vh - 34px);margin-top:34px;background:#000; }
+  .ss-view.on { display:flex; }
+  .ss-top { display:flex;align-items:center;gap:10px;padding:8px 16px;background:var(--bg-sidebar);border-bottom:1px solid var(--border); }
+  .ss-top .sharing-badge { font-family:var(--font-head);font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:4px 12px;border-radius:var(--radius-full);display:flex;align-items:center;gap:6px; }
+  .ss-top .sharing-badge .rec-dot { width:6px;height:6px;background:var(--red);border-radius:var(--radius-full);animation:blink 1s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .ss-strip { display:flex;gap:4px;margin-left:auto; }
+  .ss-mini { width:44px;height:36px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--text-3);position:relative; }
+  .ss-mini.speak { border-color:var(--accent); }
+  .ss-screen { flex:1;background:#1a1a2e;display:flex;align-items:center;justify-content:center;position:relative; }
+  .ss-placeholder { text-align:center;color:var(--text-3); }
+  .ss-placeholder .ss-icon { font-size:48px;margin-bottom:12px;opacity:0.3; }
+  .ss-placeholder p { font-family:var(--font-head);font-size:14px;letter-spacing:1px; }
+
+  /* ═══════ INCOMING ═══════ */
+  .inc-ov { display:none;position:fixed;top:34px;left:0;right:0;bottom:0;background:var(--bg-overlay);backdrop-filter:blur(20px);z-index:500;align-items:center;justify-content:center; }
+  .inc-ov.on { display:flex; }
+  .inc-card { background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-xl);padding:44px 52px;text-align:center;min-width:360px;box-shadow:0 8px 40px rgba(0,0,0,0.5); }
+  .inc-label { font-family:var(--font-head);font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:20px; }
+  .inc-av { width:76px;height:76px;background:var(--gradient);border-radius:var(--radius-full);margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:28px;font-weight:700;color:#fff;animation:ring-pulse 2s ease-in-out infinite; }
+  .inc-name { font-family:var(--font-head);font-size:20px;font-weight:700;margin-bottom:4px; }
+  .inc-type { font-family:var(--font-mono);font-size:11px;color:var(--text-3);margin-bottom:20px; }
+  .inc-members { display:flex;justify-content:center;gap:5px;margin-bottom:24px; }
+  .inc-mem { width:28px;height:28px;background:var(--bg-input);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--text-3); }
+  .inc-acts { display:flex;gap:10px;justify-content:center; }
+  .btn-acc { background:var(--accent);color:#fff;border:none;padding:12px 38px;font-size:14px;font-weight:700;border-radius:var(--radius-full);font-family:var(--font-head);letter-spacing:1px; }
+  .btn-acc:hover { box-shadow:var(--glow); }
+  .btn-dec { background:none;color:var(--red);border:1px solid rgba(239,68,68,0.2);padding:12px 38px;font-size:14px;font-weight:700;border-radius:var(--radius-full);font-family:var(--font-head); }
+  .btn-dec:hover { background:var(--red-soft);border-color:var(--red); }
+
+  /* ═══════ SETTINGS ═══════ */
+  .s-layout { display:flex;gap:20px; }
+  .s-nav { width:180px;flex-shrink:0;display:flex;flex-direction:column;gap:2px; }
+  .s-nb { background:none;border:none;text-align:left;padding:9px 12px;font-size:12px;font-weight:600;color:var(--text-3);border-radius:var(--radius-md);font-family:var(--font-head);letter-spacing:0.5px; }
+  .s-nb:hover { background:var(--bg-card);color:var(--text-2); }
+  .s-nb.on { background:var(--accent-soft);color:var(--accent); }
+  .s-panel { flex:1;display:flex;flex-direction:column;gap:10px; }
+  .sc-h { padding:12px 16px;border-bottom:1px solid var(--border);font-family:var(--font-head);font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--accent); }
+  .sc-b { padding:4px 16px; }
+  .sc-r { display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border); }
+  .sc-r:last-child { border-bottom:none; }
+  .sc-r .rl { font-size:13px;font-weight:600; }
+  .sc-r .rd { font-size:11px;color:var(--text-3);margin-top:1px; }
+  .sc-sel { background:var(--bg-input);color:var(--text-1);border:1px solid var(--border);padding:7px 10px;font-size:11px;border-radius:var(--radius-sm);min-width:220px;outline:none; }
+  .sc-sel:focus { border-color:var(--accent); }
+  .tog { width:40px;height:22px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-full);position:relative;cursor:pointer;display:inline-block;transition:all var(--ease); }
+  .tog.on { background:var(--accent);border-color:var(--accent); }
+  .tog-k { width:14px;height:14px;background:#fff;position:absolute;top:3px;left:3px;border-radius:var(--radius-full);box-shadow:0 1px 2px rgba(0,0,0,0.2);transition:left 0.2s ease; }
+  .tog.on .tog-k { left:21px; }
+  .th-sw { display:flex;gap:7px; }
+  .th-s { width:34px;height:34px;border:2px solid var(--border);cursor:pointer;border-radius:var(--radius-md);position:relative;transition:all var(--ease); }
+  .th-s.sel { border-color:var(--accent);box-shadow:0 0 10px var(--accent-glow); }
+  .th-s.sel::after { content:'✓';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:13px;font-weight:700; }
+  .th-s.dk { background:#0a0a10; }
+  .th-s.dk.sel::after { color:var(--accent); }
+  .th-s.lt { background:#f2f2f6; }
+  .th-s.lt.sel::after { color:var(--accent); }
+
+  /* ═══════ ABOUT ═══════ */
+  .ab-c { text-align:center;padding:40px 0; }
+  .ab-logo { font-family:var(--font-head);font-size:52px;font-weight:700;letter-spacing:10px;text-transform:uppercase;margin-bottom:4px; }
+  .ab-logo em { font-style:normal;color:var(--accent); }
+  .ab-ver { font-family:var(--font-mono);font-size:11px;color:var(--text-3);margin-bottom:28px; }
+  .ab-tag { font-size:16px;font-weight:500;color:var(--text-2);line-height:1.7;margin-bottom:32px; }
+  .ab-links { display:flex;justify-content:center;gap:6px;margin-bottom:32px; }
+  .ab-link { padding:8px 18px;font-size:11px;font-weight:600;color:var(--text-3);text-decoration:none;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-full);font-family:var(--font-head);transition:all var(--ease); }
+  .ab-link:hover { background:var(--accent);color:#fff;border-color:var(--accent); }
+</style>
+</head>
+<body>
+
+<nav class="snav">
+  <span>Screens</span>
+  <button class="on" onclick="go('login')">Login</button>
+  <button onclick="go('welcome')">Welcome</button>
+  <button onclick="go('dash')">Dashboard</button>
+  <button onclick="go('friends')">Friends</button>
+  <button onclick="go('groups')">Groups</button>
+  <button onclick="go('ring')">Ringing</button>
+  <button onclick="go('call')">Active Call</button>
+  <button onclick="go('ss')">Screen Share</button>
+  <button onclick="go('inc')">Incoming</button>
+  <button onclick="go('settings')">Settings</button>
+  <button onclick="go('about')">About</button>
+</nav>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="s-login" class="login-bg on">
+  <div class="login-card">
+    <div class="login-logo">K<em>E</em>STO</div>
+    <div class="login-sub">Steam-native voice chat for gamers</div>
+    <button class="login-steam" onclick="go('welcome')">⬡ Sign in with Steam</button>
+    <div class="login-note">Kesto uses your Steam account. No separate registration needed.</div>
+  </div>
+</div>
+
+<!-- ═══ WELCOME ═══ -->
+<div id="s-welcome" class="welcome-bg">
+  <div class="welcome-card">
+    <div class="welcome-icon">K</div>
+    <div class="welcome-title">Welcome to Kesto</div>
+    <div class="welcome-desc">Your Steam friends are already here. No setup, no servers — just call.</div>
+    <div class="welcome-steps">
+      <div class="welcome-step"><div class="ws-num">01</div><div class="ws-text">Your Steam friends<br>sync automatically</div></div>
+      <div class="welcome-step"><div class="ws-num">02</div><div class="ws-text">Call anyone<br>with one click</div></div>
+      <div class="welcome-step"><div class="ws-num">03</div><div class="ws-text">Share your screen<br>anytime during a call</div></div>
+    </div>
+    <button class="btn btn-big" onclick="go('dash')">Let's Go</button>
+  </div>
+</div>
+
+<!-- ═══ DASHBOARD ═══ -->
+<div id="s-dash" class="frame">
+  <div class="side"><div class="logo">K</div><div class="icons"><button class="ni on" onclick="go('dash')">■<span class="tip">Dashboard</span></button><button class="ni" onclick="go('friends')">◉<span class="tip">Friends</span></button><button class="ni" onclick="go('groups')">▣<span class="tip">Groups</span></button><button class="ni" onclick="go('settings')">⚙<span class="tip">Settings</span></button><button class="ni" onclick="go('about')">ℹ<span class="tip">About</span></button></div><div class="sbot"><button class="tbtn" onclick="toggleTheme()">◐</button><div class="sdot"></div></div></div>
+  <div class="cnt">
+    <div class="cnt-h"><h1>DASHBOARD</h1><div class="sub">Account overview</div></div>
+    <div class="cnt-b">
+      <div class="bento">
+        <div class="card b-profile" style="grid-column:span 5"><div class="b-av">MK</div><div><div class="b-name">ShadowByte_92</div><div class="b-id">STEAM_0:1:48502817</div><div class="b-status"><span class="b-dot"></span> Online</div></div></div>
+        <div class="card b-stat" style="grid-column:span 2"><div class="b-val">147</div><div class="b-label">Total Calls</div></div>
+        <div class="card b-stat" style="grid-column:span 2"><div class="b-val">62h</div><div class="b-label">Call Time</div></div>
+        <div class="card b-stat"><div class="b-val" style="font-size:20px">12</div><div class="b-label">Online</div></div>
+        <div class="card b-stat"><div class="b-val" style="font-size:20px">4</div><div class="b-label">Groups</div></div>
+        <div class="card b-stat"><div class="b-val" style="font-size:20px">2</div><div class="b-label">In Call</div></div>
+        <div class="card b-activity" style="grid-column:span 7"><div class="card-h">Recent Activity <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-3)">Last 7 days</span></div>
+          <div class="ai"><div class="ai-i">▶</div><div class="ai-n">Group call — CS2 Squad</div><div class="ai-m">42 min · 4</div><span class="ai-q ex">Excellent</span></div>
+          <div class="ai"><div class="ai-i">▶</div><div class="ai-n">Direct call — NightFox</div><div class="ai-m">18 min · 1:1</div><span class="ai-q gd">Good</span></div>
+          <div class="ai"><div class="ai-i">▶</div><div class="ai-n">Group call — Valorant Team</div><div class="ai-m">1h 03m · 5</div><span class="ai-q ex">Excellent</span></div>
+          <div class="ai"><div class="ai-i">▶</div><div class="ai-n">Direct call — PixelDrift</div><div class="ai-m">7 min · 1:1</div><span class="ai-q fr">Fair</span></div>
+        </div>
+        <div class="card b-quick" style="grid-column:span 5"><div class="card-h">Quick Call</div>
+          <div style="padding:6px 10px">
+            <div class="qi"><div class="qi-av">NF<div class="qi-d on"></div></div><div class="qi-info"><b>NightFox</b><small>Counter-Strike 2</small></div><button class="btn">Call</button></div>
+            <div class="qi"><div class="qi-av">PD<div class="qi-d on"></div></div><div class="qi-info"><b>PixelDrift</b><small>Online</small></div><button class="btn">Call</button></div>
+            <div class="qi"><div class="qi-av">VX<div class="qi-d off"></div></div><div class="qi-info"><b>VortexKing</b><small>Offline</small></div><button class="btn dis">Call</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FRIENDS ═══ -->
+<div id="s-friends" class="frame">
+  <div class="side"><div class="logo">K</div><div class="icons"><button class="ni" onclick="go('dash')">■</button><button class="ni on" onclick="go('friends')">◉</button><button class="ni" onclick="go('groups')">▣</button><button class="ni" onclick="go('settings')">⚙</button><button class="ni" onclick="go('about')">ℹ</button></div><div class="sbot"><button class="tbtn" onclick="toggleTheme()">◐</button><div class="sdot"></div></div></div>
+  <div class="cnt">
+    <div class="cnt-h"><h1>FRIENDS</h1><div class="sub">Synced from Steam</div></div>
+    <div class="cnt-b" style="padding-bottom:90px">
+      <div class="ftool">
+        <input class="finput" placeholder="Search friends...">
+        <div class="pills"><button class="pill on">All (38)</button><button class="pill">Online (12)</button><button class="pill">In Call (2)</button><button class="pill">Has Kesto (19)</button></div>
+      </div>
+      <div class="fgrid">
+        <div class="card fc"><input type="checkbox" class="fchk" checked><div class="f-av">NF<div class="f-pr on"></div></div><div class="f-info"><b>NightFox</b><small>Playing CS2</small></div><button class="btn">Call</button></div>
+        <div class="card fc"><input type="checkbox" class="fchk" checked><div class="f-av">PD<div class="f-pr on"></div></div><div class="f-info"><b>PixelDrift</b><small>Online</small></div><button class="btn">Call</button></div>
+        <div class="card fc"><input type="checkbox" class="fchk" checked><div class="f-av">IR<div class="f-pr on"></div></div><div class="f-info"><b>IronClad_X</b><small>Playing Dota 2</small></div><button class="btn">Call</button></div>
+        <div class="card fc"><input type="checkbox" class="fchk"><div class="f-av">VX<div class="f-pr on"></div></div><div class="f-info"><b>VortexKing</b><small>Online</small></div><button class="btn">Call</button></div>
+        <div class="card fc"><input type="checkbox" class="fchk"><div class="f-av">BZ<div class="f-pr on"></div></div><div class="f-info"><b>BlazeTech</b><small>Playing Valorant</small></div><button class="btn">Call</button></div>
+        <div class="card fc nk"><input type="checkbox" class="fchk" disabled><div class="f-av">RK<div class="f-pr aw"></div></div><div class="f-info"><b>RocketJoe</b><small>Online on Steam</small></div><span class="f-badge">No Kesto</span></div>
+        <div class="card fc nk"><input type="checkbox" class="fchk" disabled><div class="f-av">SM<div class="f-pr aw"></div></div><div class="f-info"><b>SmokeTrail</b><small>Apex Legends</small></div><span class="f-badge">No Kesto</span></div>
+        <div class="card fc ofl"><input type="checkbox" class="fchk" disabled><div class="f-av">DR<div class="f-pr off"></div></div><div class="f-info"><b>DarkRune</b><small>Last seen 3h ago</small></div></div>
+        <div class="card fc ofl"><input type="checkbox" class="fchk" disabled><div class="f-av">ZR<div class="f-pr off"></div></div><div class="f-info"><b>ZeroGravity</b><small>Last seen 1d ago</small></div></div>
+      </div>
+      <div class="fbar"><span>3 friends selected</span><button class="btn" style="padding:9px 26px;font-size:13px">Start Group Call (3)</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ GROUPS ═══ -->
+<div id="s-groups" class="frame">
+  <div class="side"><div class="logo">K</div><div class="icons"><button class="ni" onclick="go('dash')">■</button><button class="ni" onclick="go('friends')">◉</button><button class="ni on" onclick="go('groups')">▣</button><button class="ni" onclick="go('settings')">⚙</button><button class="ni" onclick="go('about')">ℹ</button></div><div class="sbot"><button class="tbtn" onclick="toggleTheme()">◐</button><div class="sdot"></div></div></div>
+  <div class="cnt">
+    <div class="cnt-h" style="display:flex;justify-content:space-between;align-items:center"><div><h1>GROUPS</h1><div class="sub">Saved from calls</div></div><button class="btn">+ Create Group</button></div>
+    <div class="cnt-b">
+      <div class="card gc"><div class="gc-m"><div class="gc-i">CS</div><div class="gc-info"><b>CS2 Squad</b><small>NightFox, PixelDrift, IronClad_X, VortexKing</small></div><div class="gc-meta"><span>2h ago</span><span>42m</span></div><button class="btn">Call</button><button class="btn-o" style="margin-left:4px">✕</button></div><div class="gc-stats"><div class="gc-s"><div class="v">23</div><div class="l">Total Calls</div></div><div class="gc-s"><div class="v">38m</div><div class="l">Avg Duration</div></div><div class="gc-s"><div class="v">Excellent</div><div class="l">Avg Quality</div></div></div></div>
+      <div class="card gc"><div class="gc-m"><div class="gc-i">VT</div><div class="gc-info"><b>Valorant Team</b><small>NightFox, BlazeTech, PixelDrift, IronClad_X, DarkRune</small></div><div class="gc-meta"><span>Yesterday</span><span>1h 03m</span></div><button class="btn">Call</button><button class="btn-o" style="margin-left:4px">✕</button></div><div class="gc-stats"><div class="gc-s"><div class="v">11</div><div class="l">Total Calls</div></div><div class="gc-s"><div class="v">55m</div><div class="l">Avg Duration</div></div><div class="gc-s"><div class="v">Good</div><div class="l">Avg Quality</div></div></div></div>
+      <div class="card gc"><div class="gc-m"><div class="gc-i">DU</div><div class="gc-info"><b>Duo — NightFox</b><small>NightFox, You</small></div><div class="gc-meta"><span>3d ago</span><span>22m</span></div><button class="btn">Call</button><button class="btn-o" style="margin-left:4px">✕</button></div><div class="gc-stats"><div class="gc-s"><div class="v">47</div><div class="l">Total Calls</div></div><div class="gc-s"><div class="v">19m</div><div class="l">Avg Duration</div></div><div class="gc-s"><div class="v">Excellent</div><div class="l">Avg Quality</div></div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ RINGING ═══ -->
+<div id="s-ring" class="ring-bg">
+  <div class="ring-card">
+    <div class="ring-label">Calling...</div>
+    <div class="ring-av">NF</div>
+    <div class="ring-name">NightFox</div>
+    <div class="ring-sub">Playing Counter-Strike 2</div>
+    <div class="ring-dots"><span></span><span></span><span></span></div>
+    <button class="btn-d" style="padding:12px 36px;font-size:14px" onclick="go('dash')">Cancel</button>
+  </div>
+</div>
+
+<!-- ═══ ACTIVE CALL ═══ -->
+<div id="s-call" class="call-f">
+  <div class="ct"><div class="ct-l"><span class="ct-timer">00:42:18</span><span class="ct-gn">CS2 Squad</span></div><div class="ct-r"><div class="qbars"><i></i><i></i><i></i><i></i></div><span class="ct-p">4 participants</span></div></div>
+  <div class="cg">
+    <div class="ctile speak"><div class="ctile-av">NF</div><div class="ctile-n">NightFox</div><div class="ctile-s">Speaking</div></div>
+    <div class="ctile"><div class="ctile-av">PD</div><div class="ctile-n">PixelDrift</div><span class="ctile-mute">Muted</span></div>
+    <div class="ctile"><div class="ctile-av">IR</div><div class="ctile-n">IronClad_X</div></div>
+    <div class="ctile" style="border-style:dashed"><div class="ctile-av" style="opacity:0.4">MK</div><div class="ctile-n" style="color:var(--text-3)">You</div><div class="ctile-s" style="color:var(--text-3)">Deafened</div></div>
+  </div>
+  <div class="cbar">
+    <button class="cbtn tog"><span class="ci">🎤</span> Mute</button>
+    <button class="cbtn tog"><span class="ci">🔇</span> Deafen</button>
+    <button class="cbtn" onclick="go('ss')"><span class="ci">🖥</span> Share Screen</button>
+    <button class="cbtn"><span class="ci">💬</span> Chat</button>
+    <button class="cbtn"><span class="ci">＋</span> Add</button>
+    <button class="cbtn end" onclick="go('dash')"><span class="ci">✕</span> End</button>
+  </div>
+</div>
+
+<!-- ═══ SCREEN SHARE ═══ -->
+<div id="s-ss" class="ss-view">
+  <div class="ss-top">
+    <div class="sharing-badge"><span class="rec-dot"></span> NightFox is sharing</div>
+    <span class="ct-timer" style="font-size:13px;margin-left:12px">00:42:18</span>
+    <div class="ss-strip">
+      <div class="ss-mini speak">NF</div>
+      <div class="ss-mini">PD</div>
+      <div class="ss-mini">IR</div>
+      <div class="ss-mini">MK</div>
+    </div>
+  </div>
+  <div class="ss-screen">
+    <div class="ss-placeholder">
+      <div class="ss-icon">🖥</div>
+      <p>NightFox's Screen</p>
+      <p style="font-size:11px;color:var(--text-3);margin-top:4px;font-family:var(--font-mono)">1920×1080 · 60 FPS</p>
+    </div>
+  </div>
+  <div class="cbar">
+    <button class="cbtn tog"><span class="ci">🎤</span> Mute</button>
+    <button class="cbtn tog"><span class="ci">🔇</span> Deafen</button>
+    <button class="cbtn" onclick="go('call')"><span class="ci">⬚</span> Exit Fullscreen</button>
+    <button class="cbtn end" onclick="go('dash')"><span class="ci">✕</span> End</button>
+  </div>
+</div>
+
+<!-- ═══ INCOMING ═══ -->
+<div id="s-inc" class="frame">
+  <div class="side"><div class="logo">K</div><div class="icons"><button class="ni">■</button><button class="ni">◉</button><button class="ni">▣</button><button class="ni">⚙</button><button class="ni">ℹ</button></div><div class="sbot"><button class="tbtn" onclick="toggleTheme()">◐</button><div class="sdot"></div></div></div>
+  <div class="cnt" style="position:relative"><div class="cnt-b" style="opacity:0.05"><div class="fgrid"><div class="card fc"><div class="f-av">NF</div><div class="f-info"><b>NightFox</b></div></div></div></div></div>
+  <div class="inc-ov on">
+    <div class="inc-card">
+      <div class="inc-label">Incoming Group Call</div>
+      <div class="inc-av">CS</div>
+      <div class="inc-name">CS2 Squad</div>
+      <div class="inc-type">Group call · 3 waiting</div>
+      <div class="inc-members"><div class="inc-mem">NF</div><div class="inc-mem">PD</div><div class="inc-mem">IR</div></div>
+      <div class="inc-acts"><button class="btn-acc" onclick="go('call')">Accept</button><button class="btn-dec" onclick="go('dash')">Decline</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SETTINGS ═══ -->
+<div id="s-settings" class="frame">
+  <div class="side"><div class="logo">K</div><div class="icons"><button class="ni" onclick="go('dash')">■</button><button class="ni" onclick="go('friends')">◉</button><button class="ni" onclick="go('groups')">▣</button><button class="ni on" onclick="go('settings')">⚙</button><button class="ni" onclick="go('about')">ℹ</button></div><div class="sbot"><button class="tbtn" onclick="toggleTheme()">◐</button><div class="sdot"></div></div></div>
+  <div class="cnt">
+    <div class="cnt-h"><h1>SETTINGS</h1><div class="sub">Configuration</div></div>
+    <div class="cnt-b">
+      <div class="s-layout">
+        <div class="s-nav"><button class="s-nb on">Audio</button><button class="s-nb">Display</button><button class="s-nb">Notifications</button><button class="s-nb">Account</button></div>
+        <div class="s-panel">
+          <div class="card"><div class="sc-h">Audio</div><div class="sc-b">
+            <div class="sc-r"><div><div class="rl">Microphone</div><div class="rd">Input device</div></div><select class="sc-sel"><option>Blue Yeti Stereo — USB</option></select></div>
+            <div class="sc-r"><div><div class="rl">Speakers</div><div class="rd">Output device</div></div><select class="sc-sel"><option>HyperX Cloud II — USB</option></select></div>
+            <div class="sc-r"><div><div class="rl">Test Audio</div><div class="rd">Play a test tone</div></div><button class="btn-g">▶ Test</button></div>
+            <div class="sc-r"><div><div class="rl">Noise Suppression</div><div class="rd">Reduce background noise</div></div><div class="tog on" onclick="this.classList.toggle('on')"><div class="tog-k"></div></div></div>
+          </div></div>
+          <div class="card"><div class="sc-h">Display</div><div class="sc-b">
+            <div class="sc-r"><div><div class="rl">Theme</div><div class="rd">Choose visual theme</div></div><div class="th-sw"><div class="th-s dk sel" onclick="setTheme('dark',this)"></div><div class="th-s lt" onclick="setTheme('light',this)"></div></div></div>
+          </div></div>
+          <div class="card"><div class="sc-h">Notifications</div><div class="sc-b">
+            <div class="sc-r"><div><div class="rl">Incoming Calls</div><div class="rd">Show overlay</div></div><div class="tog on" onclick="this.classList.toggle('on')"><div class="tog-k"></div></div></div>
+            <div class="sc-r"><div><div class="rl">Friend Online</div><div class="rd">Notify when online</div></div><div class="tog" onclick="this.classList.toggle('on')"><div class="tog-k"></div></div></div>
+          </div></div>
+          <div class="card"><div class="sc-h">Account</div><div class="sc-b">
+            <div class="sc-r"><div><div class="rl">Steam Profile</div><div class="rd">ShadowByte_92</div></div><button class="btn-g">View Profile</button></div>
+            <div class="sc-r"><div><div class="rl">Sign Out</div><div class="rd">Disconnect</div></div><button class="btn-d">Sign Out</button></div>
+          </div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ABOUT ═══ -->
+<div id="s-about" class="frame">
+  <div class="side"><div class="logo">K</div><div class="icons"><button class="ni" onclick="go('dash')">■</button><button class="ni" onclick="go('friends')">◉</button><button class="ni" onclick="go('groups')">▣</button><button class="ni" onclick="go('settings')">⚙</button><button class="ni on" onclick="go('about')">ℹ</button></div><div class="sbot"><button class="tbtn" onclick="toggleTheme()">◐</button><div class="sdot"></div></div></div>
+  <div class="cnt"><div class="cnt-b">
+    <div class="ab-c">
+      <div class="ab-logo">K<em>E</em>STO</div>
+      <div class="ab-ver">v0.1.0-alpha · build 2026.08.23</div>
+      <div class="ab-tag">Steam-native voice chat.<br>No servers. No subscriptions. Just call.</div>
+      <div class="ab-links"><a href="#" class="ab-link">Steam Page</a><a href="#" class="ab-link">Support</a><a href="#" class="ab-link">Privacy</a><a href="#" class="ab-link">Changelog</a></div>
+    </div>
+  </div></div>
+</div>
+
+<script>
+const screens = ['login','welcome','dash','friends','groups','ring','call','ss','inc','settings','about'];
+function go(id) {
+  screens.forEach(s => { const el=document.getElementById('s-'+s); if(el) el.classList.remove('on'); });
+  const t=document.getElementById('s-'+id); if(t) t.classList.add('on');
+  document.querySelectorAll('.snav button').forEach(b=>b.classList.remove('on'));
+  const idx=screens.indexOf(id);
+  if(idx>=0) document.querySelectorAll('.snav button')[idx].classList.add('on');
+}
+function toggleTheme() {
+  const h=document.documentElement;
+  h.setAttribute('data-theme', h.getAttribute('data-theme')==='dark'?'light':'dark');
+  updateSw();
+}
+function setTheme(t,el) { document.documentElement.setAttribute('data-theme',t); updateSw(); }
+function updateSw() {
+  const t=document.documentElement.getAttribute('data-theme');
+  document.querySelectorAll('.th-s').forEach(s=>s.classList.remove('sel'));
+  document.querySelectorAll('.th-s.'+(t==='dark'?'dk':'lt')).forEach(s=>s.classList.add('sel'));
+}
+</script>
+</body>
+</html>
