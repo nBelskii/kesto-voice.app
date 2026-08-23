@@ -1,0 +1,7 @@
+{
+  "bundle": {
+    "resources": {
+      "steamworks_sdk/redistributable_bin/win64/steam_api64.dll": "./"
+    }
+  }
+}
