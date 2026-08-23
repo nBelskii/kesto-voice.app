@@ -3,17 +3,13 @@ import { Sidebar } from '../components/Sidebar';
 import { MicTest } from '../components/MicTest';
 import { useAudioDevices } from '../hooks/useAudioDevices';
 import { ACCENT_OPTIONS, AVATAR_OPTIONS, type Profile } from '../store/profile';
+import type { AppSettings } from '../store/settings';
 import type { Screen, Theme } from '../types';
 
 interface Props {
-  theme: Theme;
-  onToggleTheme: () => void;
-  onSetTheme: (theme: Theme) => void;
   onNavigate: (screen: Screen) => void;
-  micId: string;
-  onSetMicId: (id: string) => void;
-  speakerId: string;
-  onSetSpeakerId: (id: string) => void;
+  settings: AppSettings;
+  onUpdateSettings: (patch: Partial<AppSettings>) => void;
   profile: Profile;
   onUpdateProfile: (patch: Partial<Profile>) => void;
 }
@@ -56,20 +52,16 @@ function playTestTone(sinkDeviceId: string) {
   };
 }
 
-export function Settings({
-  theme, onToggleTheme, onSetTheme, onNavigate,
-  micId, onSetMicId, speakerId, onSetSpeakerId,
-  profile, onUpdateProfile,
-}: Props) {
+export function Settings({ onNavigate, settings, onUpdateSettings, profile, onUpdateProfile }: Props) {
   const [tab, setTab] = useState<Tab>('profile');
-  const [noiseSuppression, setNoiseSuppression] = useState(true);
-  const [incomingCallsNotif, setIncomingCallsNotif] = useState(true);
-  const [friendOnlineNotif, setFriendOnlineNotif] = useState(false);
   const { inputs, outputs, permissionGranted, requestPermission } = useAudioDevices();
+
+  const toggleTheme = () => onUpdateSettings({ theme: settings.theme === 'dark' ? 'light' : 'dark' });
+  const setTheme = (theme: Theme) => onUpdateSettings({ theme });
 
   return (
     <div className="app-shell">
-      <Sidebar active="settings" onNavigate={onNavigate} theme={theme} onToggleTheme={onToggleTheme} />
+      <Sidebar active="settings" onNavigate={onNavigate} theme={settings.theme} onToggleTheme={toggleTheme} />
       <div className="cnt">
         <div className="cnt-h"><h1>SETTINGS</h1><div className="sub">Configuration</div></div>
         <div className="cnt-b">
@@ -155,21 +147,38 @@ export function Settings({
                     )}
                     <div className="sc-r">
                       <div><div className="rl">Microphone</div><div className="rd">Input device</div></div>
-                      <select className="sc-sel" value={micId} onChange={(e) => onSetMicId(e.target.value)}>
+                      <select className="sc-sel" value={settings.micId} onChange={(e) => onUpdateSettings({ micId: e.target.value })}>
                         <option value="">System default</option>
                         {inputs.map((d) => <option key={d.deviceId} value={d.deviceId}>{d.label}</option>)}
                       </select>
                     </div>
                     <div className="sc-r">
                       <div><div className="rl">Speakers</div><div className="rd">Output device</div></div>
-                      <select className="sc-sel" value={speakerId} onChange={(e) => onSetSpeakerId(e.target.value)}>
+                      <select className="sc-sel" value={settings.speakerId} onChange={(e) => onUpdateSettings({ speakerId: e.target.value })}>
                         <option value="">System default</option>
                         {outputs.map((d) => <option key={d.deviceId} value={d.deviceId}>{d.label}</option>)}
                       </select>
                     </div>
-                    <div className="sc-r"><div><div className="rl">Test Speakers</div><div className="rd">Play a test tone</div></div><button className="btn-g" onClick={() => playTestTone(speakerId)}>▶ Test</button></div>
-                    <MicTest micId={micId} />
-                    <div className="sc-r"><div><div className="rl">Noise Suppression</div><div className="rd">Reduce background noise</div></div><Toggle on={noiseSuppression} onClick={() => setNoiseSuppression(!noiseSuppression)} /></div>
+                    <div className="sc-r"><div><div className="rl">Test Speakers</div><div className="rd">Play a test tone</div></div><button className="btn-g" onClick={() => playTestTone(settings.speakerId)}>▶ Test</button></div>
+                    <div className="sc-r">
+                      <div><div className="rl">Mic Volume</div><div className="rd">How loud you sound to others</div></div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 220 }}>
+                        <input
+                          type="range"
+                          min={0}
+                          max={2}
+                          step={0.05}
+                          value={settings.micGain}
+                          onChange={(e) => onUpdateSettings({ micGain: parseFloat(e.target.value) })}
+                          style={{ flex: 1, accentColor: 'var(--accent)' }}
+                        />
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-3)', width: 38, textAlign: 'right' }}>
+                          {Math.round(settings.micGain * 100)}%
+                        </span>
+                      </div>
+                    </div>
+                    <MicTest micId={settings.micId} speakerId={settings.speakerId} gain={settings.micGain} />
+                    <div className="sc-r"><div><div className="rl">Noise Suppression</div><div className="rd">Reduce background noise</div></div><Toggle on={settings.noiseSuppression} onClick={() => onUpdateSettings({ noiseSuppression: !settings.noiseSuppression })} /></div>
                   </div>
                 </div>
               )}
@@ -180,8 +189,8 @@ export function Settings({
                     <div className="sc-r">
                       <div><div className="rl">Theme</div><div className="rd">Choose visual theme</div></div>
                       <div className="th-sw">
-                        <div className={`th-s dk${theme === 'dark' ? ' sel' : ''}`} onClick={() => onSetTheme('dark')}></div>
-                        <div className={`th-s lt${theme === 'light' ? ' sel' : ''}`} onClick={() => onSetTheme('light')}></div>
+                        <div className={`th-s dk${settings.theme === 'dark' ? ' sel' : ''}`} onClick={() => setTheme('dark')}></div>
+                        <div className={`th-s lt${settings.theme === 'light' ? ' sel' : ''}`} onClick={() => setTheme('light')}></div>
                       </div>
                     </div>
                   </div>
@@ -191,8 +200,8 @@ export function Settings({
                 <div className="card">
                   <div className="sc-h">Notifications</div>
                   <div className="sc-b">
-                    <div className="sc-r"><div><div className="rl">Incoming Calls</div><div className="rd">Show overlay</div></div><Toggle on={incomingCallsNotif} onClick={() => setIncomingCallsNotif(!incomingCallsNotif)} /></div>
-                    <div className="sc-r"><div><div className="rl">Friend Online</div><div className="rd">Notify when online</div></div><Toggle on={friendOnlineNotif} onClick={() => setFriendOnlineNotif(!friendOnlineNotif)} /></div>
+                    <div className="sc-r"><div><div className="rl">Incoming Calls</div><div className="rd">Show overlay</div></div><Toggle on={settings.incomingCallsNotif} onClick={() => onUpdateSettings({ incomingCallsNotif: !settings.incomingCallsNotif })} /></div>
+                    <div className="sc-r"><div><div className="rl">Friend Online</div><div className="rd">Notify when online</div></div><Toggle on={settings.friendOnlineNotif} onClick={() => onUpdateSettings({ friendOnlineNotif: !settings.friendOnlineNotif })} /></div>
                   </div>
                 </div>
               )}

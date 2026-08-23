@@ -53,11 +53,15 @@ export function Friends({ friends, steamConnected, theme, onToggleTheme, onNavig
             </div>
           </div>
           <div className="fgrid">
-            {filtered.map((f) => {
+            {filtered.map((f, i) => {
               const canSelect = f.hasKesto;
               const statusClass = !f.online ? 'off' : f.inGame ? 'aw' : 'on';
               return (
-                <div className={`card fc${!f.hasKesto ? ' nk' : ''}${!f.online ? ' ofl' : ''}`} key={f.steamId}>
+                <div
+                  className={`card fc stagger-item${!f.hasKesto ? ' nk' : ''}${!f.online ? ' ofl' : ''}`}
+                  key={f.steamId}
+                  style={{ '--i': i } as React.CSSProperties}
+                >
                   <input
                     type="checkbox"
                     className="fchk"

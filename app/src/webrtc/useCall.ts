@@ -17,7 +17,7 @@ export interface IncomingCall {
   fromName: string;
 }
 
-export function useCall(myName: string, micId: string) {
+export function useCall(myName: string, micId: string, micGain: number = 1) {
   const [phase, setPhase] = useState<CallPhase>('idle');
   const [peerName, setPeerName] = useState('');
   const [incoming, setIncoming] = useState<IncomingCall | null>(null);
@@ -30,10 +30,18 @@ export function useCall(myName: string, micId: string) {
   const incomingRef = useRef<IncomingCall | null>(null);
   const micIdRef = useRef(micId);
   micIdRef.current = micId;
+  const micGainRef = useRef(micGain);
+  micGainRef.current = micGain;
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
+  const micAudioCtxRef = useRef<AudioContext | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (gainNodeRef.current) gainNodeRef.current.gain.value = micGain;
+  }, [micGain]);
   const callIdRef = useRef('');
   const peerIdRef = useRef('');
   const peerNameRef = useRef('');
@@ -93,6 +101,9 @@ export function useCall(myName: string, micId: string) {
     pcRef.current = null;
     localStreamRef.current?.getTracks().forEach((t) => t.stop());
     localStreamRef.current = null;
+    gainNodeRef.current = null;
+    micAudioCtxRef.current?.close().catch(() => {});
+    micAudioCtxRef.current = null;
     if (remoteAudioRef.current) remoteAudioRef.current.srcObject = null;
     if (timerRef.current !== null) {
       window.clearInterval(timerRef.current);
@@ -151,8 +162,20 @@ export function useCall(myName: string, micId: string) {
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: id ? { deviceId: { exact: id } } : true,
     });
+    // Route through a GainNode so mic loudness (Settings) applies to what
+    // the peer actually hears, not just local monitoring. Muting still works
+    // on the raw track below — a disabled source track outputs silence, which
+    // propagates through the graph to the destination track too.
     localStreamRef.current = stream;
-    stream.getTracks().forEach((t) => pc.addTrack(t, stream));
+    const ctx = new AudioContext();
+    micAudioCtxRef.current = ctx;
+    const source = ctx.createMediaStreamSource(stream);
+    const gainNode = ctx.createGain();
+    gainNode.gain.value = micGainRef.current;
+    gainNodeRef.current = gainNode;
+    const dest = ctx.createMediaStreamDestination();
+    source.connect(gainNode).connect(dest);
+    dest.stream.getTracks().forEach((t) => pc.addTrack(t, dest.stream));
   }, []);
 
   const startCall = useCallback(

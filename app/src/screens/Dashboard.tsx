@@ -36,7 +36,7 @@ export function Dashboard({ friends, steamConnected, profile, steamId, callHisto
         <div className="cnt-h"><h1>DASHBOARD</h1><div className="sub">Account overview {steamConnected ? '· Steam connected' : '· Steam offline (mock data)'}</div></div>
         <div className="cnt-b">
           <div className="bento">
-            <div className="card b-profile" style={{ gridColumn: 'span 5' }}>
+            <div className="card b-profile stagger-item" style={{ gridColumn: 'span 5', '--i': 0 } as React.CSSProperties}>
               <div className="b-av" style={{ fontSize: 24 }}>{profile.avatar}</div>
               <div>
                 <div className="b-name">{profile.name}</div>
@@ -44,12 +44,12 @@ export function Dashboard({ friends, steamConnected, profile, steamId, callHisto
                 <div className="b-status"><span className="b-dot"></span> Online</div>
               </div>
             </div>
-            <div className="card b-stat" style={{ gridColumn: 'span 2' }}><div className="b-val">{callHistory.length}</div><div className="b-label">Total Calls</div></div>
-            <div className="card b-stat" style={{ gridColumn: 'span 2' }}><div className="b-val">{totalCallTimeSec > 0 ? formatDuration(totalCallTimeSec) : '0m'}</div><div className="b-label">Call Time</div></div>
-            <div className="card b-stat"><div className="b-val" style={{ fontSize: 20 }}>{friends.filter(f => f.online).length}</div><div className="b-label">Online</div></div>
-            <div className="card b-stat"><div className="b-val" style={{ fontSize: 20 }}>{groups.length}</div><div className="b-label">Groups</div></div>
-            <div className="card b-stat"><div className="b-val" style={{ fontSize: 20 }}>{friends.filter(f => f.inGame).length}</div><div className="b-label">In Game</div></div>
-            <div className="card b-activity" style={{ gridColumn: 'span 7' }}>
+            <div className="card b-stat stagger-item" style={{ gridColumn: 'span 2', '--i': 1 } as React.CSSProperties}><div className="b-val">{callHistory.length}</div><div className="b-label">Total Calls</div></div>
+            <div className="card b-stat stagger-item" style={{ gridColumn: 'span 2', '--i': 2 } as React.CSSProperties}><div className="b-val">{totalCallTimeSec > 0 ? formatDuration(totalCallTimeSec) : '0m'}</div><div className="b-label">Call Time</div></div>
+            <div className="card b-stat stagger-item" style={{ '--i': 3 } as React.CSSProperties}><div className="b-val" style={{ fontSize: 20 }}>{friends.filter(f => f.online).length}</div><div className="b-label">Online</div></div>
+            <div className="card b-stat stagger-item" style={{ '--i': 4 } as React.CSSProperties}><div className="b-val" style={{ fontSize: 20 }}>{groups.length}</div><div className="b-label">Groups</div></div>
+            <div className="card b-stat stagger-item" style={{ '--i': 5 } as React.CSSProperties}><div className="b-val" style={{ fontSize: 20 }}>{friends.filter(f => f.inGame).length}</div><div className="b-label">In Game</div></div>
+            <div className="card b-activity stagger-item" style={{ gridColumn: 'span 7', '--i': 6 } as React.CSSProperties}>
               <div className="card-h">Recent Activity <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-3)' }}>Last calls</span></div>
               {recent.length === 0 && (
                 <div style={{ padding: '20px 16px', fontSize: 12, color: 'var(--text-3)', textAlign: 'center' }}>
@@ -65,7 +65,7 @@ export function Dashboard({ friends, steamConnected, profile, steamId, callHisto
                 </div>
               ))}
             </div>
-            <div className="card b-quick" style={{ gridColumn: 'span 5' }}>
+            <div className="card b-quick stagger-item" style={{ gridColumn: 'span 5', '--i': 7 } as React.CSSProperties}>
               <div className="card-h">Quick Call</div>
               <div style={{ padding: '6px 10px' }}>
                 {quickCallFriends.map((f) => (

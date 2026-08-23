@@ -17,7 +17,8 @@ import { openSignalingSessions, startSignalPolling } from './webrtc/signaling';
 import { useProfile } from './store/profile';
 import { useGroups } from './store/groups';
 import { useCallHistory } from './store/callHistory';
-import type { Screen, SteamFriend, Theme } from './types';
+import { useSettings } from './store/settings';
+import type { Screen, SteamFriend } from './types';
 import './kesto.css';
 
 // Mock friends shown until Steam is running — see steam.rs for the real path
@@ -54,33 +55,24 @@ const CALL_SCREENS: Screen[] = ['ringing', 'call', 'screenshare', 'incoming'];
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('boot');
-  const [theme, setTheme] = useState<Theme>('dark');
   const [friends, setFriends] = useState<SteamFriend[]>(MOCK_FRIENDS);
   const [steamConnected, setSteamConnected] = useState(false);
   const [steamId, setSteamId] = useState('');
-  const [micId, setMicId] = useState(() => localStorage.getItem('kesto:micId') ?? '');
-  const [speakerId, setSpeakerId] = useState(() => localStorage.getItem('kesto:speakerId') ?? '');
 
+  const { settings, updateSettings } = useSettings();
   const { profile, updateProfile, seedNameFromSteam } = useProfile();
   const { groups } = useGroups();
   const callHistory = useCallHistory();
-  const call = useCall(profile.name, micId);
-
-  useEffect(() => localStorage.setItem('kesto:micId', micId), [micId]);
-  useEffect(() => localStorage.setItem('kesto:speakerId', speakerId), [speakerId]);
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
+  const call = useCall(profile.name, settings.micId, settings.micGain);
 
   // Point the remote-call <audio> element at the chosen output device where
   // the webview engine supports it (setSinkId isn't in WebKit/macOS yet).
   useEffect(() => {
     const el = call.remoteAudioRef.current as (HTMLAudioElement & { setSinkId?: (id: string) => Promise<void> }) | null;
-    if (el?.setSinkId && speakerId) {
-      el.setSinkId(speakerId).catch(() => {});
+    if (el?.setSinkId && settings.speakerId) {
+      el.setSinkId(settings.speakerId).catch(() => {});
     }
-  }, [speakerId, call.remoteAudioRef]);
+  }, [settings.speakerId, call.remoteAudioRef]);
 
   useEffect(() => {
     invoke<RustSteamProfile>('get_steam_profile')
@@ -131,7 +123,7 @@ export default function App() {
     }
   }, [call.phase, call.incoming]);
 
-  const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
+  const toggleTheme = () => updateSettings({ theme: settings.theme === 'dark' ? 'light' : 'dark' });
 
   const startCall = (targets: SteamFriend[]) => {
     // Group calling isn't wired up yet (Phase 2) — this session is 1:1 only.
@@ -158,7 +150,7 @@ export default function App() {
           steamId={steamId}
           callHistory={callHistory}
           groups={groups}
-          theme={theme}
+          theme={settings.theme}
           onToggleTheme={toggleTheme}
           onNavigate={setScreen}
           onCallFriend={(f) => startCall([f])}
@@ -170,7 +162,7 @@ export default function App() {
         <Friends
           friends={friends}
           steamConnected={steamConnected}
-          theme={theme}
+          theme={settings.theme}
           onToggleTheme={toggleTheme}
           onNavigate={setScreen}
           onStartGroupCall={startCall}
@@ -182,7 +174,7 @@ export default function App() {
         <Groups
           friends={friends}
           callHistory={callHistory}
-          theme={theme}
+          theme={settings.theme}
           onToggleTheme={toggleTheme}
           onNavigate={setScreen}
           onCallFriend={(f) => startCall([f])}
@@ -219,21 +211,16 @@ export default function App() {
     case 'settings':
       screenEl = (
         <Settings
-          theme={theme}
-          onToggleTheme={toggleTheme}
-          onSetTheme={setTheme}
           onNavigate={setScreen}
-          micId={micId}
-          onSetMicId={setMicId}
-          speakerId={speakerId}
-          onSetSpeakerId={setSpeakerId}
+          settings={settings}
+          onUpdateSettings={updateSettings}
           profile={profile}
           onUpdateProfile={updateProfile}
         />
       );
       break;
     case 'about':
-      screenEl = <About theme={theme} onToggleTheme={toggleTheme} onNavigate={setScreen} />;
+      screenEl = <About theme={settings.theme} onToggleTheme={toggleTheme} onNavigate={setScreen} />;
       break;
     default:
       screenEl = null;
@@ -243,7 +230,9 @@ export default function App() {
     <>
       {/* Always mounted so voice audio survives navigation (e.g. into Screen Share) */}
       <audio ref={call.remoteAudioRef} autoPlay style={{ display: 'none' }} />
-      {screenEl}
+      <div key={screen} className="screen-transition">
+        {screenEl}
+      </div>
     </>
   );
 }

@@ -80,7 +80,7 @@ export function Groups({ friends, callHistory, theme, onToggleTheme, onNavigate,
             </div>
           )}
 
-          {groups.map((g) => {
+          {groups.map((g, i) => {
             const members = g.memberSteamIds.map((id) => friendsById.get(id)).filter((f): f is SteamFriend => !!f);
             const memberIdSet = new Set(g.memberSteamIds);
             const groupCalls = callHistory.filter((c) => memberIdSet.has(c.peerSteamId));
@@ -97,7 +97,7 @@ export function Groups({ friends, callHistory, theme, onToggleTheme, onNavigate,
             const callableMember = members.find((m) => m.online);
 
             return (
-              <div className="card gc" key={g.id}>
+              <div className="card gc stagger-item" key={g.id} style={{ '--i': i } as React.CSSProperties}>
                 <div className="gc-m">
                   <div className="gc-i">{g.name.slice(0, 2).toUpperCase()}</div>
                   <div className="gc-info">
