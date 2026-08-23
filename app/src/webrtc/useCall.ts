@@ -24,6 +24,7 @@ export function useCall(myName: string, micId: string, micGain: number = 1) {
   const [muted, setMuted] = useState(false);
   const [elapsedSec, setElapsedSec] = useState(0);
   const [remoteVolume, setRemoteVolumeState] = useState(1);
+  const [peerId, setPeerId] = useState('');
 
   // Mirrors of the state above, for reads inside the async signal handler —
   // React state captured in a closure would go stale between renders.
@@ -127,6 +128,7 @@ export function useCall(myName: string, micId: string, micGain: number = 1) {
     pendingCandidatesRef.current = [];
     callIdRef.current = '';
     peerIdRef.current = '';
+    setPeerId('');
     startedAtRef.current = 0;
     elapsedSecRef.current = 0;
     setElapsedSec(0);
@@ -207,6 +209,7 @@ export function useCall(myName: string, micId: string, micGain: number = 1) {
       const callId = crypto.randomUUID();
       callIdRef.current = callId;
       peerIdRef.current = friend.steamId;
+      setPeerId(friend.steamId);
       setPeerNameBoth(friend.name);
       setPhaseBoth('outgoing');
       await sendSignal(friend.steamId, { kind: 'call-request', callId, fromName: myName });
@@ -226,6 +229,7 @@ export function useCall(myName: string, micId: string, micGain: number = 1) {
     if (!call) return;
     callIdRef.current = call.callId;
     peerIdRef.current = call.fromSteamId;
+    setPeerId(call.fromSteamId);
     setPeerNameBoth(call.fromName);
     setIncomingBoth(null);
     setPhaseBoth('connecting');
@@ -326,6 +330,7 @@ export function useCall(myName: string, micId: string, micGain: number = 1) {
 
   return {
     phase,
+    peerId,
     peerName,
     incoming,
     muted,

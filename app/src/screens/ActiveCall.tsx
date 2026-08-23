@@ -5,6 +5,7 @@ interface Props {
   onToggleMute: () => void;
   onShareScreen: () => void;
   onEnd: () => void;
+  onOpenChat: () => void;
   remoteVolume: number;
   onSetRemoteVolume: (v: number) => void;
 }
@@ -17,7 +18,7 @@ function formatElapsed(totalSec: number): string {
   return `${pad(h)}:${pad(m)}:${pad(s)}`;
 }
 
-export function ActiveCall({ peerName, elapsedSec, muted, onToggleMute, onShareScreen, onEnd, remoteVolume, onSetRemoteVolume }: Props) {
+export function ActiveCall({ peerName, elapsedSec, muted, onToggleMute, onShareScreen, onEnd, onOpenChat, remoteVolume, onSetRemoteVolume }: Props) {
   return (
     <div className="call-f">
       <div className="ct">
@@ -49,6 +50,7 @@ export function ActiveCall({ peerName, elapsedSec, muted, onToggleMute, onShareS
       <div className="cbar">
         <button className={`cbtn${muted ? ' tog' : ''}`} onClick={onToggleMute}><span className="ci">🎤</span> {muted ? 'Unmute' : 'Mute'}</button>
         <button className="cbtn" onClick={onShareScreen}><span className="ci">🖥</span> Share Screen</button>
+        <button className="cbtn" onClick={onOpenChat}><span className="ci">💬</span> Chat</button>
         <button className="cbtn end" onClick={onEnd}><span className="ci">✕</span> End</button>
       </div>
     </div>

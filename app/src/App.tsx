@@ -12,11 +12,13 @@ import { ScreenShareView } from './screens/ScreenShareView';
 import { Incoming } from './screens/Incoming';
 import { Settings } from './screens/Settings';
 import { About } from './screens/About';
+import { ChatPanel, type ChatThread } from './components/ChatPanel';
 import { useCall } from './webrtc/useCall';
-import { openSignalingSessions, startSignalPolling } from './webrtc/signaling';
+import { onSignal, openSignalingSessions, startSignalPolling } from './webrtc/signaling';
 import { useProfile } from './store/profile';
 import { useGroups } from './store/groups';
 import { useCallHistory } from './store/callHistory';
+import { appendChatMessage } from './store/chat';
 import { useSettings } from './store/settings';
 import type { Screen, SteamFriend } from './types';
 import './kesto.css';
@@ -58,6 +60,7 @@ export default function App() {
   const [friends, setFriends] = useState<SteamFriend[]>(MOCK_FRIENDS);
   const [steamConnected, setSteamConnected] = useState(false);
   const [steamId, setSteamId] = useState('');
+  const [chatThread, setChatThread] = useState<ChatThread | null>(null);
 
   const { settings, updateSettings } = useSettings();
   const { profile, updateProfile, seedNameFromSteam } = useProfile();
@@ -107,6 +110,20 @@ export default function App() {
 
     return startSignalPolling();
   }, [seedNameFromSteam]);
+
+  useEffect(() => {
+    return onSignal((fromSteamId, payload) => {
+      if (payload.kind !== 'chat-message') return;
+      appendChatMessage({
+        threadId: payload.threadId,
+        fromSteamId,
+        fromName: payload.fromName,
+        text: payload.text,
+        timestamp: Date.now(),
+        mine: false,
+      });
+    });
+  }, []);
 
   // Drive screen navigation off real call state instead of a fake timer.
   useEffect(() => {
@@ -167,6 +184,7 @@ export default function App() {
           onToggleTheme={toggleTheme}
           onNavigate={setScreen}
           onStartGroupCall={startCall}
+          onOpenChat={setChatThread}
         />
       );
       break;
@@ -179,6 +197,7 @@ export default function App() {
           onToggleTheme={toggleTheme}
           onNavigate={setScreen}
           onCallFriend={(f) => startCall([f])}
+          onOpenChat={setChatThread}
         />
       );
       break;
@@ -194,6 +213,7 @@ export default function App() {
           onToggleMute={call.toggleMute}
           onShareScreen={() => setScreen('screenshare')}
           onEnd={call.endCall}
+          onOpenChat={() => call.peerId && setChatThread({ id: call.peerId, name: call.peerName, recipientIds: [call.peerId] })}
           remoteVolume={call.remoteVolume}
           onSetRemoteVolume={call.setRemoteVolume}
         />
@@ -237,6 +257,7 @@ export default function App() {
       <div key={screen} className="screen-transition">
         {screenEl}
       </div>
+      <ChatPanel thread={chatThread} myName={profile.name} onClose={() => setChatThread(null)} />
     </>
   );
 }

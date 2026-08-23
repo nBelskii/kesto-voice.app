@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
+import { MessageCircle } from 'lucide-react';
 import { Sidebar } from '../components/Sidebar';
+import type { ChatThread } from '../components/ChatPanel';
 import type { Screen, SteamFriend, Theme } from '../types';
 
 interface Props {
@@ -9,11 +11,12 @@ interface Props {
   onToggleTheme: () => void;
   onNavigate: (screen: Screen) => void;
   onStartGroupCall: (friends: SteamFriend[]) => void;
+  onOpenChat: (thread: ChatThread) => void;
 }
 
 type Filter = 'all' | 'online' | 'incall' | 'kesto';
 
-export function Friends({ friends, steamConnected, theme, onToggleTheme, onNavigate, onStartGroupCall }: Props) {
+export function Friends({ friends, steamConnected, theme, onToggleTheme, onNavigate, onStartGroupCall, onOpenChat }: Props) {
   const [filter, setFilter] = useState<Filter>('all');
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -75,7 +78,10 @@ export function Friends({ friends, steamConnected, theme, onToggleTheme, onNavig
                     <small>{f.gameName ?? (f.online ? 'Online' : 'Offline')}</small>
                   </div>
                   {f.hasKesto ? (
-                    <button className="btn" disabled={!f.online} onClick={() => onStartGroupCall([f])}>Call</button>
+                    <>
+                      <button className="chat-btn" onClick={() => onOpenChat({ id: f.steamId, name: f.name, recipientIds: [f.steamId] })}><MessageCircle size={14} /></button>
+                      <button className="btn" disabled={!f.online} onClick={() => onStartGroupCall([f])}>Call</button>
+                    </>
                   ) : (
                     <span className="f-badge">No Kesto</span>
                   )}

@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
+import { MessageCircle } from 'lucide-react';
 import { Sidebar } from '../components/Sidebar';
 import { useGroups } from '../store/groups';
 import { formatDuration, type CallRecord } from '../store/callHistory';
+import type { ChatThread } from '../components/ChatPanel';
 import type { Screen, SteamFriend, Theme } from '../types';
 
 interface Props {
@@ -11,9 +13,10 @@ interface Props {
   onToggleTheme: () => void;
   onNavigate: (screen: Screen) => void;
   onCallFriend: (friend: SteamFriend) => void;
+  onOpenChat: (thread: ChatThread) => void;
 }
 
-export function Groups({ friends, callHistory, theme, onToggleTheme, onNavigate, onCallFriend }: Props) {
+export function Groups({ friends, callHistory, theme, onToggleTheme, onNavigate, onCallFriend, onOpenChat }: Props) {
   const { groups, createGroup, deleteGroup } = useGroups();
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState('');
@@ -104,6 +107,7 @@ export function Groups({ friends, callHistory, theme, onToggleTheme, onNavigate,
                     <b>{g.name}</b>
                     <small>{members.map((m) => m.name).join(', ') || 'No members'}</small>
                   </div>
+                  <button className="chat-btn" onClick={() => onOpenChat({ id: g.id, name: g.name, recipientIds: g.memberSteamIds })}><MessageCircle size={14} /></button>
                   {callableMember ? (
                     <button className="btn" onClick={() => onCallFriend(callableMember)}>Call {callableMember.name}</button>
                   ) : (

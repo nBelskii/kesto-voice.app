@@ -8,7 +8,8 @@ export type SignalPayload =
   | { kind: 'call-end'; callId: string }
   | { kind: 'sdp-offer'; callId: string; sdp: string }
   | { kind: 'sdp-answer'; callId: string; sdp: string }
-  | { kind: 'ice-candidate'; callId: string; candidate: RTCIceCandidateInit };
+  | { kind: 'ice-candidate'; callId: string; candidate: RTCIceCandidateInit }
+  | { kind: 'chat-message'; threadId: string; threadName: string; text: string; fromName: string };
 
 export type SignalHandler = (fromSteamId: string, payload: SignalPayload) => void;
 
