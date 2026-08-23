@@ -1,4 +1,5 @@
 export type Screen =
+  | 'boot'
   | 'login'
   | 'welcome'
   | 'dashboard'

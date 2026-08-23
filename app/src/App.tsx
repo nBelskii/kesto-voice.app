@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { BootScreen } from './components/BootScreen';
 import { Login } from './screens/Login';
 import { Welcome } from './screens/Welcome';
 import { Dashboard } from './screens/Dashboard';
@@ -13,6 +14,9 @@ import { Settings } from './screens/Settings';
 import { About } from './screens/About';
 import { useCall } from './webrtc/useCall';
 import { openSignalingSessions, startSignalPolling } from './webrtc/signaling';
+import { useProfile } from './store/profile';
+import { useGroups } from './store/groups';
+import { useCallHistory } from './store/callHistory';
 import type { Screen, SteamFriend, Theme } from './types';
 import './kesto.css';
 
@@ -49,15 +53,18 @@ function initials(name: string): string {
 const CALL_SCREENS: Screen[] = ['ringing', 'call', 'screenshare', 'incoming'];
 
 export default function App() {
-  const [screen, setScreen] = useState<Screen>('login');
+  const [screen, setScreen] = useState<Screen>('boot');
   const [theme, setTheme] = useState<Theme>('dark');
   const [friends, setFriends] = useState<SteamFriend[]>(MOCK_FRIENDS);
   const [steamConnected, setSteamConnected] = useState(false);
-  const [myName, setMyName] = useState('You');
+  const [steamId, setSteamId] = useState('');
   const [micId, setMicId] = useState(() => localStorage.getItem('kesto:micId') ?? '');
   const [speakerId, setSpeakerId] = useState(() => localStorage.getItem('kesto:speakerId') ?? '');
 
-  const call = useCall(myName, micId);
+  const { profile, updateProfile, seedNameFromSteam } = useProfile();
+  const { groups } = useGroups();
+  const callHistory = useCallHistory();
+  const call = useCall(profile.name, micId);
 
   useEffect(() => localStorage.setItem('kesto:micId', micId), [micId]);
   useEffect(() => localStorage.setItem('kesto:speakerId', speakerId), [speakerId]);
@@ -77,7 +84,10 @@ export default function App() {
 
   useEffect(() => {
     invoke<RustSteamProfile>('get_steam_profile')
-      .then((p) => setMyName(p.name))
+      .then((p) => {
+        setSteamId(p.steam_id);
+        seedNameFromSteam(p.name);
+      })
       .catch(() => {});
 
     invoke<RustSteamFriend[]>('get_steam_friends')
@@ -104,7 +114,7 @@ export default function App() {
       });
 
     return startSignalPolling();
-  }, []);
+  }, [seedNameFromSteam]);
 
   // Drive screen navigation off real call state instead of a fake timer.
   useEffect(() => {
@@ -130,6 +140,9 @@ export default function App() {
 
   let screenEl: React.ReactNode;
   switch (screen) {
+    case 'boot':
+      screenEl = <BootScreen onDone={() => setScreen('login')} />;
+      break;
     case 'login':
       screenEl = <Login onLogin={() => setScreen('welcome')} />;
       break;
@@ -141,6 +154,10 @@ export default function App() {
         <Dashboard
           friends={friends}
           steamConnected={steamConnected}
+          profile={profile}
+          steamId={steamId}
+          callHistory={callHistory}
+          groups={groups}
           theme={theme}
           onToggleTheme={toggleTheme}
           onNavigate={setScreen}
@@ -161,7 +178,16 @@ export default function App() {
       );
       break;
     case 'groups':
-      screenEl = <Groups theme={theme} onToggleTheme={toggleTheme} onNavigate={setScreen} />;
+      screenEl = (
+        <Groups
+          friends={friends}
+          callHistory={callHistory}
+          theme={theme}
+          onToggleTheme={toggleTheme}
+          onNavigate={setScreen}
+          onCallFriend={(f) => startCall([f])}
+        />
+      );
       break;
     case 'ringing':
       screenEl = <Ringing peerName={call.peerName} connecting={call.phase === 'connecting'} onCancel={call.cancelOutgoing} />;
@@ -201,6 +227,8 @@ export default function App() {
           onSetMicId={setMicId}
           speakerId={speakerId}
           onSetSpeakerId={setSpeakerId}
+          profile={profile}
+          onUpdateProfile={updateProfile}
         />
       );
       break;

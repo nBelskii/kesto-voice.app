@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { onSignal, sendSignal, type SignalPayload } from './signaling';
 import type { SteamFriend } from '../types';
+import { appendCallRecord, qualityFromLossRatio, type CallQuality } from '../store/callHistory';
 
 // Public STUN only for now — enough for most home NATs to find a direct P2P
 // path. No TURN relay yet, so calls across some symmetric-NAT/CGNAT setups
@@ -35,8 +36,11 @@ export function useCall(myName: string, micId: string) {
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
   const callIdRef = useRef('');
   const peerIdRef = useRef('');
+  const peerNameRef = useRef('');
   const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
   const timerRef = useRef<number | null>(null);
+  const startedAtRef = useRef(0);
+  const elapsedSecRef = useRef(0);
 
   const setPhaseBoth = (p: CallPhase) => {
     phaseRef.current = p;
@@ -46,9 +50,46 @@ export function useCall(myName: string, micId: string) {
     incomingRef.current = v;
     setIncoming(v);
   };
+  const setPeerNameBoth = (v: string) => {
+    peerNameRef.current = v;
+    setPeerName(v);
+  };
+
+  const logCallRecord = useCallback(async (pc: RTCPeerConnection) => {
+    let quality: CallQuality = 'Good';
+    try {
+      const stats = await pc.getStats();
+      let lost = 0;
+      let received = 0;
+      stats.forEach((report) => {
+        if (report.type === 'inbound-rtp' && report.kind === 'audio') {
+          lost += report.packetsLost ?? 0;
+          received += report.packetsReceived ?? 0;
+        }
+      });
+      const total = lost + received;
+      if (total > 0) quality = qualityFromLossRatio(lost / total);
+    } catch {
+      // Stats unavailable (e.g. connection tore down before we could ask) — keep default.
+    }
+    appendCallRecord({
+      peerSteamId: peerIdRef.current,
+      peerName: peerNameRef.current,
+      startedAt: startedAtRef.current,
+      durationSec: elapsedSecRef.current,
+      quality,
+    });
+  }, []);
 
   const cleanup = useCallback(() => {
-    pcRef.current?.close();
+    const pc = pcRef.current;
+    if (pc && startedAtRef.current !== 0 && peerIdRef.current) {
+      // Fire off the stats fetch before closing — getStats() on an already
+      // -closed connection returns nothing useful.
+      logCallRecord(pc);
+    }
+
+    pc?.close();
     pcRef.current = null;
     localStreamRef.current?.getTracks().forEach((t) => t.stop());
     localStreamRef.current = null;
@@ -60,12 +101,14 @@ export function useCall(myName: string, micId: string) {
     pendingCandidatesRef.current = [];
     callIdRef.current = '';
     peerIdRef.current = '';
+    startedAtRef.current = 0;
+    elapsedSecRef.current = 0;
     setElapsedSec(0);
     setMuted(false);
-    setPeerName('');
+    setPeerNameBoth('');
     setPhaseBoth('idle');
     setIncomingBoth(null);
-  }, []);
+  }, [logCallRecord]);
 
   const createPeerConnection = useCallback(
     (peerSteamId: string, callId: string) => {
@@ -86,7 +129,11 @@ export function useCall(myName: string, micId: string) {
         if (pc.connectionState === 'connected') {
           setPhaseBoth('active');
           if (timerRef.current === null) {
-            timerRef.current = window.setInterval(() => setElapsedSec((s) => s + 1), 1000);
+            startedAtRef.current = Date.now();
+            timerRef.current = window.setInterval(() => {
+              elapsedSecRef.current += 1;
+              setElapsedSec(elapsedSecRef.current);
+            }, 1000);
           }
         }
         if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
@@ -113,7 +160,7 @@ export function useCall(myName: string, micId: string) {
       const callId = crypto.randomUUID();
       callIdRef.current = callId;
       peerIdRef.current = friend.steamId;
-      setPeerName(friend.name);
+      setPeerNameBoth(friend.name);
       setPhaseBoth('outgoing');
       await sendSignal(friend.steamId, { kind: 'call-request', callId, fromName: myName });
     },
@@ -132,7 +179,7 @@ export function useCall(myName: string, micId: string) {
     if (!call) return;
     callIdRef.current = call.callId;
     peerIdRef.current = call.fromSteamId;
-    setPeerName(call.fromName);
+    setPeerNameBoth(call.fromName);
     setIncomingBoth(null);
     setPhaseBoth('connecting');
     await sendSignal(call.fromSteamId, { kind: 'call-accept', callId: call.callId });
