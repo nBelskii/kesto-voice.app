@@ -1,0 +1,2 @@
+[env]
+STEAM_SDK_LOCATION = { value = "steamworks_sdk", relative = true }

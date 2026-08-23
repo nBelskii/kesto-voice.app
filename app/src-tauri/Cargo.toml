@@ -1,0 +1,31 @@
+[package]
+name = "app"
+version = "0.1.0"
+description = "A Tauri App"
+authors = ["you"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# The high-level `steamworks` crate's hand-written wrapper is written against
+# an older Steamworks API surface (missing params Valve added since, e.g.
+# ISteamFriends jumped v017->v018) and fails to compile against current SDKs.
+# We call steamworks-sys directly instead, with bindings rebuilt from our
+# actual SDK headers so symbol versions match libsteam_api.dylib exactly.
+steamworks-sys = { version = "0.11", features = ["rebuild-bindings"] }
+
