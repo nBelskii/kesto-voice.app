@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "app",
+  "productName": "Kesto",
   "version": "0.1.0",
-  "identifier": "com.mykoladzendzeliuk.app",
+  "identifier": "com.kesto.app",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -12,9 +12,9 @@
   "app": {
     "windows": [
       {
-        "title": "app",
-        "width": 800,
-        "height": 600
+        "title": "Kesto",
+        "width": 1180,
+        "height": 760
       }
     ],
     "security": {

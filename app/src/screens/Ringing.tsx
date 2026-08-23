@@ -1,18 +1,16 @@
-import type { SteamFriend } from '../types';
-
 interface Props {
-  target: SteamFriend | null;
+  peerName: string;
+  connecting: boolean;
   onCancel: () => void;
 }
 
-export function Ringing({ target, onCancel }: Props) {
+export function Ringing({ peerName, connecting, onCancel }: Props) {
   return (
     <div className="ring-bg">
       <div className="ring-card">
-        <div className="ring-label">Calling...</div>
-        <div className="ring-av">{target?.avatarInitials ?? '?'}</div>
-        <div className="ring-name">{target?.name ?? 'Unknown'}</div>
-        <div className="ring-sub">{target?.gameName ?? 'Online'}</div>
+        <div className="ring-label">{connecting ? 'Connecting...' : 'Calling...'}</div>
+        <div className="ring-av">{peerName.slice(0, 2).toUpperCase() || '?'}</div>
+        <div className="ring-name">{peerName}</div>
         <div className="ring-dots"><span></span><span></span><span></span></div>
         <button className="btn-d" style={{ padding: '12px 36px', fontSize: 14 }} onClick={onCancel}>Cancel</button>
       </div>

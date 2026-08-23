@@ -1,39 +1,37 @@
-import { useState } from 'react';
-
 interface Props {
+  peerName: string;
+  elapsedSec: number;
+  muted: boolean;
+  onToggleMute: () => void;
   onShareScreen: () => void;
   onEnd: () => void;
 }
 
-export function ActiveCall({ onShareScreen, onEnd }: Props) {
-  const [muted, setMuted] = useState(false);
-  const [deafened, setDeafened] = useState(false);
+function formatElapsed(totalSec: number): string {
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return `${pad(h)}:${pad(m)}:${pad(s)}`;
+}
 
+export function ActiveCall({ peerName, elapsedSec, muted, onToggleMute, onShareScreen, onEnd }: Props) {
   return (
     <div className="call-f">
       <div className="ct">
-        <div className="ct-l"><span className="ct-timer">00:42:18</span><span className="ct-gn">CS2 Squad</span></div>
+        <div className="ct-l"><span className="ct-timer">{formatElapsed(elapsedSec)}</span><span className="ct-gn">{peerName}</span></div>
         <div className="ct-r">
           <div className="qbars"><i></i><i></i><i></i><i></i></div>
-          <span className="ct-p">4 participants</span>
+          <span className="ct-p">1:1</span>
         </div>
       </div>
       <div className="cg">
-        <div className="ctile speak"><div className="ctile-av">NF</div><div className="ctile-n">NightFox</div><div className="ctile-s">Speaking</div></div>
-        <div className="ctile"><div className="ctile-av">PD</div><div className="ctile-n">PixelDrift</div><span className="ctile-mute">Muted</span></div>
-        <div className="ctile"><div className="ctile-av">IR</div><div className="ctile-n">IronClad_X</div></div>
-        <div className="ctile" style={{ borderStyle: 'dashed' }}>
-          <div className="ctile-av" style={{ opacity: 0.4 }}>MK</div>
-          <div className="ctile-n" style={{ color: 'var(--text-3)' }}>You</div>
-          {deafened && <div className="ctile-s" style={{ color: 'var(--text-3)' }}>Deafened</div>}
-        </div>
+        <div className="ctile"><div className="ctile-av">{peerName.slice(0, 2).toUpperCase() || '?'}</div><div className="ctile-n">{peerName}</div></div>
+        <div className="ctile"><div className="ctile-av">{muted ? '🔇' : 'YOU'}</div><div className="ctile-n">You</div>{muted && <span className="ctile-mute">Muted</span>}</div>
       </div>
       <div className="cbar">
-        <button className={`cbtn${muted ? ' tog' : ''}`} onClick={() => setMuted(!muted)}><span className="ci">🎤</span> {muted ? 'Unmute' : 'Mute'}</button>
-        <button className={`cbtn${deafened ? ' tog' : ''}`} onClick={() => setDeafened(!deafened)}><span className="ci">🔇</span> Deafen</button>
+        <button className={`cbtn${muted ? ' tog' : ''}`} onClick={onToggleMute}><span className="ci">🎤</span> {muted ? 'Unmute' : 'Mute'}</button>
         <button className="cbtn" onClick={onShareScreen}><span className="ci">🖥</span> Share Screen</button>
-        <button className="cbtn"><span className="ci">💬</span> Chat</button>
-        <button className="cbtn"><span className="ci">＋</span> Add</button>
         <button className="cbtn end" onClick={onEnd}><span className="ci">✕</span> End</button>
       </div>
     </div>

@@ -70,25 +70,29 @@ pub fn init() -> Result<SteamState, String> {
     }
 }
 
+pub type SteamStateSlot = Option<SteamState>;
+
 #[tauri::command]
-pub fn get_steam_profile(state: tauri::State<SteamState>) -> SteamProfile {
+pub fn get_steam_profile(state: tauri::State<SteamStateSlot>) -> Result<SteamProfile, String> {
+    let state = state.as_ref().ok_or("Steam is not connected")?;
     unsafe {
         let steam_id = sys::SteamAPI_ISteamUser_GetSteamID(state.user);
         let name = c_str_to_string(sys::SteamAPI_ISteamFriends_GetPersonaName(state.friends));
-        SteamProfile {
+        Ok(SteamProfile {
             steam_id: steam_id.to_string(),
             name,
-        }
+        })
     }
 }
 
 #[tauri::command]
-pub fn get_steam_friends(state: tauri::State<SteamState>) -> Vec<SteamFriend> {
+pub fn get_steam_friends(state: tauri::State<SteamStateSlot>) -> Result<Vec<SteamFriend>, String> {
+    let state = state.as_ref().ok_or("Steam is not connected")?;
     unsafe {
         let flags = sys::EFriendFlags::k_EFriendFlagImmediate as c_int;
         let count = sys::SteamAPI_ISteamFriends_GetFriendCount(state.friends, flags);
 
-        (0..count)
+        Ok((0..count)
             .map(|i| {
                 let steam_id = sys::SteamAPI_ISteamFriends_GetFriendByIndex(state.friends, i, flags);
                 let name = c_str_to_string(sys::SteamAPI_ISteamFriends_GetFriendPersonaName(
@@ -117,6 +121,6 @@ pub fn get_steam_friends(state: tauri::State<SteamState>) -> Vec<SteamFriend> {
                     game_name: None,
                 }
             })
-            .collect()
+            .collect())
     }
 }

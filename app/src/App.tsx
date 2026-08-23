@@ -11,10 +11,12 @@ import { ScreenShareView } from './screens/ScreenShareView';
 import { Incoming } from './screens/Incoming';
 import { Settings } from './screens/Settings';
 import { About } from './screens/About';
+import { useCall } from './webrtc/useCall';
+import { openSignalingSessions, startSignalPolling } from './webrtc/signaling';
 import type { Screen, SteamFriend, Theme } from './types';
 import './kesto.css';
 
-// Mock friends until Steamworks (AppID 480) is wired up — see task #3
+// Mock friends shown until Steam is running — see steam.rs for the real path
 const MOCK_FRIENDS: SteamFriend[] = [
   { steamId: '1', name: 'NightFox', avatarInitials: 'NF', online: true, inGame: true, gameName: 'Playing CS2', hasKesto: true },
   { steamId: '2', name: 'PixelDrift', avatarInitials: 'PD', online: true, inGame: false, hasKesto: true },
@@ -35,62 +37,107 @@ interface RustSteamFriend {
   game_name: string | null;
 }
 
+interface RustSteamProfile {
+  steam_id: string;
+  name: string;
+}
+
 function initials(name: string): string {
   return name.slice(0, 2).toUpperCase();
 }
 
+const CALL_SCREENS: Screen[] = ['ringing', 'call', 'screenshare', 'incoming'];
+
 export default function App() {
   const [screen, setScreen] = useState<Screen>('login');
   const [theme, setTheme] = useState<Theme>('dark');
-  const [callTarget, setCallTarget] = useState<SteamFriend | null>(null);
   const [friends, setFriends] = useState<SteamFriend[]>(MOCK_FRIENDS);
   const [steamConnected, setSteamConnected] = useState(false);
+  const [myName, setMyName] = useState('You');
+  const [micId, setMicId] = useState(() => localStorage.getItem('kesto:micId') ?? '');
+  const [speakerId, setSpeakerId] = useState(() => localStorage.getItem('kesto:speakerId') ?? '');
+
+  const call = useCall(myName, micId);
+
+  useEffect(() => localStorage.setItem('kesto:micId', micId), [micId]);
+  useEffect(() => localStorage.setItem('kesto:speakerId', speakerId), [speakerId]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
+  // Point the remote-call <audio> element at the chosen output device where
+  // the webview engine supports it (setSinkId isn't in WebKit/macOS yet).
   useEffect(() => {
+    const el = call.remoteAudioRef.current as (HTMLAudioElement & { setSinkId?: (id: string) => Promise<void> }) | null;
+    if (el?.setSinkId && speakerId) {
+      el.setSinkId(speakerId).catch(() => {});
+    }
+  }, [speakerId, call.remoteAudioRef]);
+
+  useEffect(() => {
+    invoke<RustSteamProfile>('get_steam_profile')
+      .then((p) => setMyName(p.name))
+      .catch(() => {});
+
     invoke<RustSteamFriend[]>('get_steam_friends')
       .then((rustFriends) => {
         setSteamConnected(true);
-        setFriends(
-          rustFriends.map((f) => ({
-            steamId: f.steam_id,
-            name: f.name,
-            avatarInitials: initials(f.name),
-            online: f.online,
-            inGame: f.in_game,
-            gameName: f.game_name ?? undefined,
-            // Steamworks alone can't tell us who has Kesto installed — that
-            // needs our own presence layer (Phase 1 signaling). Assume yes
-            // for now since real testing only happens between Kesto users.
-            hasKesto: true,
-          })),
-        );
+        const mapped = rustFriends.map((f) => ({
+          steamId: f.steam_id,
+          name: f.name,
+          avatarInitials: initials(f.name),
+          online: f.online,
+          inGame: f.in_game,
+          gameName: f.game_name ?? undefined,
+          // Steamworks alone can't tell us who has Kesto installed — that
+          // needs our own presence layer. Assume yes since real testing only
+          // happens between Kesto users who already know to install it.
+          hasKesto: true,
+        }));
+        setFriends(mapped);
+        openSignalingSessions(mapped.map((f) => f.steamId)).catch(() => {});
       })
       .catch((err) => {
         console.warn('Steam friends unavailable, using mock data:', err);
         setSteamConnected(false);
       });
+
+    return startSignalPolling();
   }, []);
+
+  // Drive screen navigation off real call state instead of a fake timer.
+  useEffect(() => {
+    if (call.incoming) {
+      setScreen('incoming');
+      return;
+    }
+    if (call.phase === 'outgoing' || call.phase === 'connecting') {
+      setScreen('ringing');
+    } else if (call.phase === 'active') {
+      setScreen((s) => (s === 'screenshare' ? s : 'call'));
+    } else if (call.phase === 'idle') {
+      setScreen((s) => (CALL_SCREENS.includes(s) ? 'dashboard' : s));
+    }
+  }, [call.phase, call.incoming]);
 
   const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
 
-  const startCall = (friends: SteamFriend[]) => {
-    setCallTarget(friends[0] ?? null);
-    setScreen('ringing');
-    // Ringing is simulated for now — real answer/connect flow lands with WebRTC signaling (Phase 1)
-    setTimeout(() => setScreen('call'), 1800);
+  const startCall = (targets: SteamFriend[]) => {
+    // Group calling isn't wired up yet (Phase 2) — this session is 1:1 only.
+    if (targets[0]) call.startCall(targets[0]);
   };
 
+  let screenEl: React.ReactNode;
   switch (screen) {
     case 'login':
-      return <Login onLogin={() => setScreen('welcome')} />;
+      screenEl = <Login onLogin={() => setScreen('welcome')} />;
+      break;
     case 'welcome':
-      return <Welcome onDone={() => setScreen('dashboard')} />;
+      screenEl = <Welcome onDone={() => setScreen('dashboard')} />;
+      break;
     case 'dashboard':
-      return (
+      screenEl = (
         <Dashboard
           friends={friends}
           steamConnected={steamConnected}
@@ -100,8 +147,9 @@ export default function App() {
           onCallFriend={(f) => startCall([f])}
         />
       );
+      break;
     case 'friends':
-      return (
+      screenEl = (
         <Friends
           friends={friends}
           steamConnected={steamConnected}
@@ -111,21 +159,63 @@ export default function App() {
           onStartGroupCall={startCall}
         />
       );
+      break;
     case 'groups':
-      return <Groups theme={theme} onToggleTheme={toggleTheme} onNavigate={setScreen} />;
+      screenEl = <Groups theme={theme} onToggleTheme={toggleTheme} onNavigate={setScreen} />;
+      break;
     case 'ringing':
-      return <Ringing target={callTarget} onCancel={() => setScreen('dashboard')} />;
+      screenEl = <Ringing peerName={call.peerName} connecting={call.phase === 'connecting'} onCancel={call.cancelOutgoing} />;
+      break;
     case 'call':
-      return <ActiveCall onShareScreen={() => setScreen('screenshare')} onEnd={() => setScreen('dashboard')} />;
+      screenEl = (
+        <ActiveCall
+          peerName={call.peerName}
+          elapsedSec={call.elapsedSec}
+          muted={call.muted}
+          onToggleMute={call.toggleMute}
+          onShareScreen={() => setScreen('screenshare')}
+          onEnd={call.endCall}
+        />
+      );
+      break;
     case 'screenshare':
-      return <ScreenShareView onExit={() => setScreen('call')} onEnd={() => setScreen('dashboard')} />;
+      screenEl = <ScreenShareView onExit={() => setScreen('call')} onEnd={call.endCall} />;
+      break;
     case 'incoming':
-      return <Incoming onAccept={() => setScreen('call')} onDecline={() => setScreen('dashboard')} />;
+      screenEl = (
+        <Incoming
+          fromName={call.incoming?.fromName ?? ''}
+          onAccept={call.acceptIncoming}
+          onDecline={call.declineIncoming}
+        />
+      );
+      break;
     case 'settings':
-      return <Settings theme={theme} onToggleTheme={toggleTheme} onSetTheme={setTheme} onNavigate={setScreen} />;
+      screenEl = (
+        <Settings
+          theme={theme}
+          onToggleTheme={toggleTheme}
+          onSetTheme={setTheme}
+          onNavigate={setScreen}
+          micId={micId}
+          onSetMicId={setMicId}
+          speakerId={speakerId}
+          onSetSpeakerId={setSpeakerId}
+        />
+      );
+      break;
     case 'about':
-      return <About theme={theme} onToggleTheme={toggleTheme} onNavigate={setScreen} />;
+      screenEl = <About theme={theme} onToggleTheme={toggleTheme} onNavigate={setScreen} />;
+      break;
     default:
-      return null;
+      screenEl = null;
   }
+
+  return (
+    <>
+      {/* Always mounted so voice audio survives navigation (e.g. into Screen Share) */}
+      <audio ref={call.remoteAudioRef} autoPlay style={{ display: 'none' }} />
+      {screenEl}
+    </>
+  );
 }
