@@ -193,6 +193,8 @@ export default function App() {
           onToggleMute={call.toggleMute}
           onShareScreen={() => setScreen('screenshare')}
           onEnd={call.endCall}
+          remoteVolume={call.remoteVolume}
+          onSetRemoteVolume={call.setRemoteVolume}
         />
       );
       break;
@@ -228,6 +230,7 @@ export default function App() {
 
   return (
     <>
+      <div className="ambient"><span /><span /><span /></div>
       {/* Always mounted so voice audio survives navigation (e.g. into Screen Share) */}
       <audio ref={call.remoteAudioRef} autoPlay style={{ display: 'none' }} />
       <div key={screen} className="screen-transition">

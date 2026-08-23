@@ -5,6 +5,8 @@ interface Props {
   onToggleMute: () => void;
   onShareScreen: () => void;
   onEnd: () => void;
+  remoteVolume: number;
+  onSetRemoteVolume: (v: number) => void;
 }
 
 function formatElapsed(totalSec: number): string {
@@ -15,7 +17,7 @@ function formatElapsed(totalSec: number): string {
   return `${pad(h)}:${pad(m)}:${pad(s)}`;
 }
 
-export function ActiveCall({ peerName, elapsedSec, muted, onToggleMute, onShareScreen, onEnd }: Props) {
+export function ActiveCall({ peerName, elapsedSec, muted, onToggleMute, onShareScreen, onEnd, remoteVolume, onSetRemoteVolume }: Props) {
   return (
     <div className="call-f">
       <div className="ct">
@@ -26,7 +28,22 @@ export function ActiveCall({ peerName, elapsedSec, muted, onToggleMute, onShareS
         </div>
       </div>
       <div className="cg">
-        <div className="ctile"><div className="ctile-av">{peerName.slice(0, 2).toUpperCase() || '?'}</div><div className="ctile-n">{peerName}</div></div>
+        <div className="ctile">
+          <div className="ctile-av">{peerName.slice(0, 2).toUpperCase() || '?'}</div>
+          <div className="ctile-n">{peerName}</div>
+          <div className="ctile-vol" onClick={(e) => e.stopPropagation()}>
+            <span>🔈</span>
+            <input
+              type="range"
+              min={0}
+              max={2}
+              step={0.05}
+              value={remoteVolume}
+              onChange={(e) => onSetRemoteVolume(parseFloat(e.target.value))}
+            />
+            <span className="ctile-vol-val">{Math.round(remoteVolume * 100)}%</span>
+          </div>
+        </div>
         <div className="ctile"><div className="ctile-av">{muted ? '🔇' : 'YOU'}</div><div className="ctile-n">You</div>{muted && <span className="ctile-mute">Muted</span>}</div>
       </div>
       <div className="cbar">

@@ -23,6 +23,7 @@ export function useCall(myName: string, micId: string, micGain: number = 1) {
   const [incoming, setIncoming] = useState<IncomingCall | null>(null);
   const [muted, setMuted] = useState(false);
   const [elapsedSec, setElapsedSec] = useState(0);
+  const [remoteVolume, setRemoteVolumeState] = useState(1);
 
   // Mirrors of the state above, for reads inside the async signal handler —
   // React state captured in a closure would go stale between renders.
@@ -32,16 +33,25 @@ export function useCall(myName: string, micId: string, micGain: number = 1) {
   micIdRef.current = micId;
   const micGainRef = useRef(micGain);
   micGainRef.current = micGain;
+  const remoteVolumeRef = useRef(1);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const micAudioCtxRef = useRef<AudioContext | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
+  const remoteAudioCtxRef = useRef<AudioContext | null>(null);
+  const remoteGainNodeRef = useRef<GainNode | null>(null);
 
   useEffect(() => {
     if (gainNodeRef.current) gainNodeRef.current.gain.value = micGain;
   }, [micGain]);
+
+  const setRemoteVolume = useCallback((v: number) => {
+    remoteVolumeRef.current = v;
+    setRemoteVolumeState(v);
+    if (remoteGainNodeRef.current) remoteGainNodeRef.current.gain.value = v;
+  }, []);
   const callIdRef = useRef('');
   const peerIdRef = useRef('');
   const peerNameRef = useRef('');
@@ -104,6 +114,11 @@ export function useCall(myName: string, micId: string, micGain: number = 1) {
     gainNodeRef.current = null;
     micAudioCtxRef.current?.close().catch(() => {});
     micAudioCtxRef.current = null;
+    remoteGainNodeRef.current = null;
+    remoteAudioCtxRef.current?.close().catch(() => {});
+    remoteAudioCtxRef.current = null;
+    remoteVolumeRef.current = 1;
+    setRemoteVolumeState(1);
     if (remoteAudioRef.current) remoteAudioRef.current.srcObject = null;
     if (timerRef.current !== null) {
       window.clearInterval(timerRef.current);
@@ -131,10 +146,19 @@ export function useCall(myName: string, micId: string, micGain: number = 1) {
       };
       pc.ontrack = (e) => {
         const [stream] = e.streams;
-        if (remoteAudioRef.current) {
-          remoteAudioRef.current.srcObject = stream;
-          remoteAudioRef.current.play().catch(() => {});
-        }
+        if (!remoteAudioRef.current) return;
+        // Route through a GainNode so the per-peer volume slider (ActiveCall)
+        // can boost or cut this participant independently of everyone else.
+        const ctx = new AudioContext();
+        remoteAudioCtxRef.current = ctx;
+        const source = ctx.createMediaStreamSource(stream);
+        const gainNode = ctx.createGain();
+        gainNode.gain.value = remoteVolumeRef.current;
+        remoteGainNodeRef.current = gainNode;
+        const dest = ctx.createMediaStreamDestination();
+        source.connect(gainNode).connect(dest);
+        remoteAudioRef.current.srcObject = dest.stream;
+        remoteAudioRef.current.play().catch(() => {});
       };
       pc.onconnectionstatechange = () => {
         if (pc.connectionState === 'connected') {
@@ -306,6 +330,8 @@ export function useCall(myName: string, micId: string, micGain: number = 1) {
     incoming,
     muted,
     elapsedSec,
+    remoteVolume,
+    setRemoteVolume,
     remoteAudioRef,
     startCall,
     cancelOutgoing,
