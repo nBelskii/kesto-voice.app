@@ -24,8 +24,15 @@ use steamworks_sys as sys;
 use tauri::AppHandle;
 
 const DEV_APP_ID: u32 = 480;
-const TICK_INTERVAL: Duration = Duration::from_millis(30);
-const FRIENDS_REFRESH_EVERY_N_TICKS: u32 = 100; // ~3s at 30ms/tick
+// 30ms was too aggressive: a Windows P2P call attempt hit
+// "SteamnetworkingSockets service thread waited 127ms for lock" warnings
+// followed by a hard ACCESS_VIOLATION inside the Steam client's own P2P/ICE
+// code — main-thread Steam API calls this frequent were contending with
+// Steam's own internal networking service thread for its locks. Backing off
+// to 100ms cuts that contention substantially; still imperceptible for call
+// setup or chat (a 100ms signaling delay isn't noticeable).
+const TICK_INTERVAL: Duration = Duration::from_millis(100);
+const FRIENDS_REFRESH_EVERY_N_TICKS: u32 = 30; // ~3s at 100ms/tick
 
 #[derive(Clone, Copy)]
 struct Interfaces {
@@ -137,6 +144,14 @@ pub fn spawn_tick_loop(app_handle: AppHandle, shared: Arc<SharedState>) {
     });
 }
 
+unsafe fn accept_session_once(interfaces: Interfaces, shared: &SharedState, steam_id: u64) {
+    let mut accepted = shared.accepted_sessions.lock().unwrap();
+    if accepted.insert(steam_id) {
+        let identity = identity_for(steam_id);
+        sys::SteamAPI_ISteamNetworkingMessages_AcceptSessionWithUser(interfaces.messages, &identity);
+    }
+}
+
 unsafe fn pump_once(interfaces: Interfaces, shared: &SharedState, refresh_friends: bool) {
     sys::SteamAPI_RunCallbacks();
 
@@ -148,12 +163,11 @@ unsafe fn pump_once(interfaces: Interfaces, shared: &SharedState, refresh_friend
     for cmd in pending {
         match cmd {
             OutCommand::OpenSession { steam_id } => {
-                let identity = identity_for(steam_id);
-                sys::SteamAPI_ISteamNetworkingMessages_AcceptSessionWithUser(interfaces.messages, &identity);
+                accept_session_once(interfaces, shared, steam_id);
             }
             OutCommand::SendMessage { steam_id, payload } => {
+                accept_session_once(interfaces, shared, steam_id);
                 let identity = identity_for(steam_id);
-                sys::SteamAPI_ISteamNetworkingMessages_AcceptSessionWithUser(interfaces.messages, &identity);
                 let bytes = payload.into_bytes();
                 sys::SteamAPI_ISteamNetworkingMessages_SendMessageToUser(
                     interfaces.messages,

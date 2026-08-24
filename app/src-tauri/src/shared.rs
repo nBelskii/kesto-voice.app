@@ -2,7 +2,7 @@
 // the only place allowed to touch the Steam API) and Tauri commands
 // (commands.rs, which only ever read/write these Mutexes — never call Steam
 // API functions directly). See steam_thread.rs for why this split exists.
-use std::collections::VecDeque;
+use std::collections::{HashSet, VecDeque};
 use std::sync::atomic::AtomicBool;
 use std::sync::Mutex;
 use serde::Serialize;
@@ -41,4 +41,10 @@ pub struct SharedState {
     pub friends: Mutex<Vec<SteamFriend>>,
     pub inbox: Mutex<VecDeque<SignalMessage>>,
     pub outbox: Mutex<VecDeque<OutCommand>>,
+    /// Steam IDs we've already called AcceptSessionWithUser for. Re-accepting
+    /// is harmless per Valve's docs, but skipping the redundant calls cuts
+    /// Steam API traffic during a burst (e.g. a flurry of ICE candidates to
+    /// the same peer while a call is connecting) — implicated in a P2P/ICE
+    /// crash on Windows that a busier main thread seemed to trigger.
+    pub accepted_sessions: Mutex<HashSet<u64>>,
 }
