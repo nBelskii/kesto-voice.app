@@ -38,7 +38,6 @@ const FRIENDS_REFRESH_EVERY_N_TICKS: u32 = 30; // ~3s at 100ms/tick
 struct Interfaces {
     friends: *mut sys::ISteamFriends,
     messages: *mut sys::ISteamNetworkingMessages,
-    utils: *mut sys::ISteamNetworkingUtils,
 }
 // Raw pointers aren't Send by default; they're only ever dereferenced from
 // the main thread (enforced by always routing through run_on_main_thread),
@@ -114,8 +113,11 @@ pub fn init(shared: &Arc<SharedState>) {
         // "candidate type not allowed" warnings while a call couldn't
         // connect. Whether SDR is actually reachable for the shared
         // Spacewar (480) AppID we're testing under is a separate open
-        // question we can't fully rule out; see the relay status logging
-        // in pump_once for a live read on that.
+        // question we can't fully rule out. (We tried also logging
+        // GetRelayNetworkStatus() for live diagnosis, but bindgen produces
+        // an opaque, fieldless struct for SteamRelayNetworkStatus_t on the
+        // Windows build — a platform difference in how it parses the
+        // headers — so that part was dropped rather than fight it.)
         sys::SteamAPI_ISteamNetworkingUtils_InitRelayNetworkAccess(utils_if);
 
         let steam_id = sys::SteamAPI_ISteamUser_GetSteamID(user_if);
@@ -136,26 +138,18 @@ pub fn spawn_tick_loop(app_handle: AppHandle, shared: Arc<SharedState>) {
         Interfaces {
             friends: sys::SteamAPI_SteamFriends_v018(),
             messages: sys::SteamAPI_SteamNetworkingMessages_SteamAPI_v002(),
-            utils: sys::SteamAPI_SteamNetworkingUtils_SteamAPI_v004(),
         }
     };
 
     std::thread::spawn(move || {
         let mut tick_count: u32 = 0;
-        let mut relay_status_logged = false;
         loop {
             std::thread::sleep(TICK_INTERVAL);
             let shared = shared.clone();
             tick_count = tick_count.wrapping_add(1);
             let refresh_friends = tick_count % FRIENDS_REFRESH_EVERY_N_TICKS == 0;
-            // Give relay init a few seconds before checking — logged once,
-            // not every tick, since this is diagnostic noise once known.
-            let log_relay_status = !relay_status_logged && tick_count >= 30;
-            if log_relay_status {
-                relay_status_logged = true;
-            }
             let sent = app_handle.run_on_main_thread(move || unsafe {
-                pump_once(interfaces, &shared, refresh_friends, log_relay_status);
+                pump_once(interfaces, &shared, refresh_friends);
             });
             if sent.is_err() {
                 break;
@@ -172,21 +166,11 @@ unsafe fn accept_session_once(interfaces: Interfaces, shared: &SharedState, stea
     }
 }
 
-unsafe fn pump_once(interfaces: Interfaces, shared: &SharedState, refresh_friends: bool, log_relay_status: bool) {
+unsafe fn pump_once(interfaces: Interfaces, shared: &SharedState, refresh_friends: bool) {
     sys::SteamAPI_RunCallbacks();
 
     if refresh_friends {
         *shared.friends.lock().unwrap() = fetch_friends(interfaces.friends);
-    }
-
-    if log_relay_status {
-        let mut status: sys::SteamRelayNetworkStatus_t = std::mem::zeroed();
-        sys::SteamAPI_ISteamNetworkingUtils_GetRelayNetworkStatus(interfaces.utils, &mut status);
-        let debug_msg = c_str_to_string(status.m_debugMsg.as_ptr());
-        eprintln!(
-            "[steam] relay network status: avail={:?} any_relay={:?} network_config={:?} — {debug_msg}",
-            status.m_eAvail, status.m_eAvailAnyRelay, status.m_eAvailNetworkConfig
-        );
     }
 
     let pending: Vec<OutCommand> = shared.outbox.lock().unwrap().drain(..).collect();
