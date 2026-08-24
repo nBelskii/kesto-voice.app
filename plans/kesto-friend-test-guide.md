@@ -90,3 +90,12 @@ npm run tauri build
 ### Дозвіл на мікрофон
 
 При першому запуску ОС (macOS/Windows) покаже системний запит доступу до мікрофона — обов'язково дозволити, інакше `getUserMedia` впаде з помилкою і дзвінок не почнеться.
+
+ERROR:
+npm : File C:\Program Files\nodejs\npm.ps1 cannot be loaded because running scripts is disabled on this system. For
+more information, see about_Execution_Policies at https:/go.microsoft.com/fwlink/?LinkID=135170.
+At line:1 char:1
++ npm run tauri dev
++ ~~~
+    + CategoryInfo          : SecurityError: (:) [], PSSecurityException
+    + FullyQualifiedErrorId : UnauthorizedAccess
