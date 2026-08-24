@@ -14,6 +14,7 @@ import { Incoming } from './screens/Incoming';
 import { Settings } from './screens/Settings';
 import { About } from './screens/About';
 import { ChatPanel, type ChatThread } from './components/ChatPanel';
+import { UpdateBanner } from './components/UpdateBanner';
 import { useCall } from './webrtc/useCall';
 import { onSignal, openSignalingSessions, startSignalPolling } from './webrtc/signaling';
 import { useProfile } from './store/profile';
@@ -290,6 +291,7 @@ export default function App() {
         {screenEl}
       </div>
       <ChatPanel thread={chatThread} myName={profile.name} onClose={() => setChatThread(null)} />
+      <UpdateBanner />
     </>
   );
 }
