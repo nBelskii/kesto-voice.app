@@ -35,16 +35,18 @@ export function Messages({ friends, theme, onToggleTheme, onNavigate, onOpenChat
               No conversations yet. Message a friend or group to start one.
             </div>
           )}
-          {threads.map((t, i) => (
+          {threads.map((t, i) => {
+            const name = t.threadName || 'Unknown';
+            return (
             <div
               key={t.threadId}
               className="card fc stagger-item"
               style={{ '--i': i, cursor: 'pointer', marginBottom: 6 } as React.CSSProperties}
-              onClick={() => openThread(t.threadId, t.threadName, t.participantIds)}
+              onClick={() => openThread(t.threadId, name, t.participantIds)}
             >
-              <div className="f-av">{t.threadName.slice(0, 2).toUpperCase()}</div>
+              <div className="f-av">{name.slice(0, 2).toUpperCase()}</div>
               <div className="f-info">
-                <b>{t.threadName}</b>
+                <b>{name}</b>
                 <small>{t.lastText}</small>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -56,7 +58,8 @@ export function Messages({ friends, theme, onToggleTheme, onNavigate, onOpenChat
                 )}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
