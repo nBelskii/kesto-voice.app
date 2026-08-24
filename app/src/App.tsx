@@ -6,6 +6,7 @@ import { Welcome } from './screens/Welcome';
 import { Dashboard } from './screens/Dashboard';
 import { Friends } from './screens/Friends';
 import { Groups } from './screens/Groups';
+import { Messages } from './screens/Messages';
 import { Ringing } from './screens/Ringing';
 import { ActiveCall } from './screens/ActiveCall';
 import { ScreenShareView } from './screens/ScreenShareView';
@@ -20,6 +21,7 @@ import { useGroups } from './store/groups';
 import { useCallHistory } from './store/callHistory';
 import { appendChatMessage } from './store/chat';
 import { useSettings } from './store/settings';
+import { playIncomingCallSound, playMessageSound } from './lib/sound';
 import type { Screen, SteamFriend } from './types';
 import './kesto.css';
 
@@ -85,30 +87,40 @@ export default function App() {
       })
       .catch(() => {});
 
-    invoke<RustSteamFriend[]>('get_steam_friends')
-      .then((rustFriends) => {
-        setSteamConnected(true);
-        const mapped = rustFriends.map((f) => ({
-          steamId: f.steam_id,
-          name: f.name,
-          avatarInitials: initials(f.name),
-          online: f.online,
-          inGame: f.in_game,
-          gameName: f.game_name ?? undefined,
-          // Steamworks alone can't tell us who has Kesto installed — that
-          // needs our own presence layer. Assume yes since real testing only
-          // happens between Kesto users who already know to install it.
-          hasKesto: true,
-        }));
-        setFriends(mapped);
-        openSignalingSessions(mapped.map((f) => f.steamId)).catch(() => {});
-      })
-      .catch((err) => {
-        console.warn('Steam friends unavailable, using mock data:', err);
-        setSteamConnected(false);
-      });
+    const fetchFriends = () => {
+      invoke<RustSteamFriend[]>('get_steam_friends')
+        .then((rustFriends) => {
+          setSteamConnected(true);
+          const mapped = rustFriends.map((f) => ({
+            steamId: f.steam_id,
+            name: f.name,
+            avatarInitials: initials(f.name),
+            online: f.online,
+            inGame: f.in_game,
+            gameName: f.game_name ?? undefined,
+            // Steamworks alone can't tell us who has Kesto installed — that
+            // needs our own presence layer. Assume yes since real testing only
+            // happens between Kesto users who already know to install it.
+            hasKesto: true,
+          }));
+          setFriends(mapped);
+          openSignalingSessions(mapped.map((f) => f.steamId)).catch(() => {});
+        })
+        .catch((err) => {
+          console.warn('Steam friends unavailable, using mock data:', err);
+          setSteamConnected(false);
+        });
+    };
 
-    return startSignalPolling();
+    fetchFriends();
+    // Steam presence (online/offline/in-game) isn't pushed to us — poll for it
+    // so a friend coming online shows up without restarting the app.
+    const friendsInterval = window.setInterval(fetchFriends, 10_000);
+    const stopPolling = startSignalPolling();
+    return () => {
+      window.clearInterval(friendsInterval);
+      stopPolling();
+    };
   }, [seedNameFromSteam]);
 
   useEffect(() => {
@@ -116,14 +128,23 @@ export default function App() {
       if (payload.kind !== 'chat-message') return;
       appendChatMessage({
         threadId: payload.threadId,
+        threadName: payload.threadName,
         fromSteamId,
         fromName: payload.fromName,
         text: payload.text,
         timestamp: Date.now(),
         mine: false,
       });
+      // Skip the ding if you're already looking at that exact conversation.
+      if (chatThread?.id !== payload.threadId) playMessageSound();
     });
-  }, []);
+  }, [chatThread]);
+
+  // Play a ringtone the moment an incoming call shows up (not on every
+  // re-render while it's still ringing).
+  useEffect(() => {
+    if (call.incoming) playIncomingCallSound();
+  }, [call.incoming?.callId]);
 
   // Drive screen navigation off real call state instead of a fake timer.
   useEffect(() => {
@@ -197,6 +218,17 @@ export default function App() {
           onToggleTheme={toggleTheme}
           onNavigate={setScreen}
           onCallFriend={(f) => startCall([f])}
+          onOpenChat={setChatThread}
+        />
+      );
+      break;
+    case 'messages':
+      screenEl = (
+        <Messages
+          friends={friends}
+          theme={settings.theme}
+          onToggleTheme={toggleTheme}
+          onNavigate={setScreen}
           onOpenChat={setChatThread}
         />
       );

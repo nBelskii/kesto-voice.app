@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { X, Send } from 'lucide-react';
 import { sendSignal } from '../webrtc/signaling';
-import { appendChatMessage, useChatMessages } from '../store/chat';
+import { appendChatMessage, markThreadSeen, useChatMessages } from '../store/chat';
 
 export interface ChatThread {
   id: string;
@@ -24,6 +24,10 @@ export function ChatPanel({ thread, myName, onClose }: Props) {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
   }, [messages, thread]);
 
+  useEffect(() => {
+    if (thread) markThreadSeen(thread.id);
+  }, [thread, messages.length]);
+
   if (!thread) return null;
 
   const send = () => {
@@ -31,6 +35,7 @@ export function ChatPanel({ thread, myName, onClose }: Props) {
     if (!value) return;
     appendChatMessage({
       threadId: thread.id,
+      threadName: thread.name,
       fromSteamId: '',
       fromName: myName,
       text: value,

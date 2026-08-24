@@ -20,6 +20,7 @@ export function Groups({ friends, callHistory, theme, onToggleTheme, onNavigate,
   const { groups, createGroup, deleteGroup } = useGroups();
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState('');
+  const [memberQuery, setMemberQuery] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const friendsById = useMemo(() => new Map(friends.map((f) => [f.steamId, f])), [friends]);
@@ -33,11 +34,13 @@ export function Groups({ friends, callHistory, theme, onToggleTheme, onNavigate,
     });
   };
 
+  const canCreate = newName.trim().length > 0 && selected.size > 0;
+
   const submitCreate = () => {
-    const name = newName.trim();
-    if (!name || selected.size === 0) return;
-    createGroup(name, Array.from(selected));
+    if (!canCreate) return;
+    createGroup(newName.trim(), Array.from(selected));
     setNewName('');
+    setMemberQuery('');
     setSelected(new Set());
     setCreating(false);
   };
@@ -61,18 +64,32 @@ export function Groups({ friends, callHistory, theme, onToggleTheme, onNavigate,
                 onChange={(e) => setNewName(e.target.value)}
                 autoFocus
               />
+              <input
+                className="finput"
+                style={{ width: '100%', marginBottom: 10 }}
+                placeholder="Search friends to add..."
+                value={memberQuery}
+                onChange={(e) => setMemberQuery(e.target.value)}
+              />
               <div className="fgrid" style={{ marginBottom: 12 }}>
-                {friends.filter((f) => f.hasKesto).map((f) => (
-                  <label key={f.steamId} className="card fc" style={{ cursor: 'pointer' }}>
-                    <input type="checkbox" className="fchk" checked={selected.has(f.steamId)} onChange={() => toggleSelected(f.steamId)} />
-                    <div className="f-av">{f.avatarInitials}</div>
-                    <div className="f-info"><b>{f.name}</b></div>
-                  </label>
-                ))}
+                {friends
+                  .filter((f) => f.hasKesto)
+                  .filter((f) => !memberQuery || f.name.toLowerCase().includes(memberQuery.toLowerCase()))
+                  .map((f) => (
+                    <label key={f.steamId} className="card fc" style={{ cursor: 'pointer' }}>
+                      <input type="checkbox" className="fchk" checked={selected.has(f.steamId)} onChange={() => toggleSelected(f.steamId)} />
+                      <div className="f-av">{f.avatarInitials}</div>
+                      <div className="f-info"><b>{f.name}</b></div>
+                    </label>
+                  ))}
+                {friends.filter((f) => f.hasKesto).length === 0 && (
+                  <div style={{ color: 'var(--text-3)', fontSize: 12, padding: '8px 0' }}>No Kesto friends to add yet.</div>
+                )}
               </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button className="btn" onClick={submitCreate}>Create</button>
-                <button className="btn-o" onClick={() => { setCreating(false); setNewName(''); setSelected(new Set()); }}>Cancel</button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <button className={`btn${canCreate ? '' : ' dis'}`} onClick={submitCreate}>Create</button>
+                <button className="btn-o" onClick={() => { setCreating(false); setNewName(''); setMemberQuery(''); setSelected(new Set()); }}>Cancel</button>
+                {!canCreate && <span style={{ fontSize: 11, color: 'var(--text-3)' }}>Enter a name and pick at least one friend</span>}
               </div>
             </div>
           )}

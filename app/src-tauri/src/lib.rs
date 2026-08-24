@@ -1,35 +1,45 @@
-mod messages;
-mod steam;
+mod commands;
+mod shared;
+mod steam_thread;
+
+use shared::SharedState;
+use std::sync::Arc;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let steam_state: steam::SteamStateSlot = match steam::init() {
-        Ok(state) => Some(state),
-        Err(err) => {
-            eprintln!("[steam] {err} — friends list will stay empty until Steam is running.");
-            None
-        }
-    };
+    let shared = Arc::new(SharedState::default());
 
-    let messaging_state: messages::MessagingStateSlot = match messages::init() {
-        Ok(state) => Some(state),
-        Err(err) => {
-            eprintln!("[messages] {err} — call signaling will not work until Steam is running.");
-            None
-        }
-    };
-
-    tauri::Builder::default()
+    let app = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .manage(steam_state)
-        .manage(messaging_state)
+        .manage(shared.clone())
         .invoke_handler(tauri::generate_handler![
-            steam::get_steam_profile,
-            steam::get_steam_friends,
-            messages::open_signaling_sessions,
-            messages::send_signal,
-            messages::poll_signals,
+            commands::get_steam_profile,
+            commands::get_steam_friends,
+            commands::open_signaling_sessions,
+            commands::send_signal,
+            commands::poll_signals,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application");
+
+    // Must happen on this thread (the real process main thread) before the
+    // event loop starts — see steam_thread.rs for why.
+    steam_thread::init(&shared);
+    let init_error = shared.init_error.lock().unwrap().clone();
+    if let Some(err) = init_error {
+        eprintln!("[steam] {err} — friends, calls, and chat will stay unavailable until Steam is running.");
+    } else {
+        steam_thread::spawn_tick_loop(app.handle().clone(), shared);
+    }
+
+    app.run(|_, event| {
+        // A clean shutdown matters here more than usual: killing the process
+        // without this (e.g. during dev iteration) can leave the Steam
+        // client's IPC pipe bookkeeping in a bad state for the *next* run —
+        // we chased a "fatal stalled cross-thread pipe" crash that turned out
+        // to be exactly that, self-inflicted by repeated hard-kills in dev.
+        if matches!(event, tauri::RunEvent::Exit) {
+            unsafe { steamworks_sys::SteamAPI_Shutdown() };
+        }
+    });
 }

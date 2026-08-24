@@ -92,7 +92,8 @@ h1,h2,h3 { font-family:var(--font-head); }
 .side .icons { flex:1;display:flex;flex-direction:column;gap:3px;width:100%; }
 .ni { width:100%;height:42px;border:none;background:none;border-radius:var(--radius-md);display:flex;align-items:center;gap:12px;padding:0 12px;color:var(--text-3);position:relative; }
 .ni svg { width:18px;height:18px;flex-shrink:0; }
-.ni .label { font-family:var(--font-head);font-size:13px;font-weight:600;letter-spacing:0.3px; }
+.ni .label { font-family:var(--font-head);font-size:13px;font-weight:600;letter-spacing:0.3px;flex:1;text-align:left; }
+.ni-badge { background:var(--accent);color:#fff;font-size:10px;font-weight:700;border-radius:999px;padding:1px 7px;flex-shrink:0; }
 .ni:hover { background:var(--panel-bg);color:var(--text-2); }
 .ni.on { background:var(--accent-soft);color:var(--accent); }
 .side .sbot { display:flex;align-items:center;justify-content:space-between;gap:6px;padding:10px 6px 0;border-top:1px solid var(--panel-border);width:100%; }

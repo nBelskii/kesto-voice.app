@@ -5,6 +5,7 @@ export type Screen =
   | 'dashboard'
   | 'friends'
   | 'groups'
+  | 'messages'
   | 'ringing'
   | 'call'
   | 'screenshare'
