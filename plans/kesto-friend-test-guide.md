@@ -91,7 +91,9 @@ npm run tauri build
 
 При першому запуску ОС (macOS/Windows) покаже системний запит доступу до мікрофона — обов'язково дозволити, інакше `getUserMedia` впаде з помилкою і дзвінок не почнеться.
 
-ERROR:
+### PowerShell блокує npm ("running scripts is disabled on this system")
+
+```
 npm : File C:\Program Files\nodejs\npm.ps1 cannot be loaded because running scripts is disabled on this system. For
 more information, see about_Execution_Policies at https:/go.microsoft.com/fwlink/?LinkID=135170.
 At line:1 char:1
@@ -99,3 +101,12 @@ At line:1 char:1
 + ~~~
     + CategoryInfo          : SecurityError: (:) [], PSSecurityException
     + FullyQualifiedErrorId : UnauthorizedAccess
+```
+
+Стандартне обмеження Windows PowerShell (npm використовує `.ps1`-обгортку). Виправляється один раз, прав адміністратора не треба:
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+Підтверди `Y` якщо запитає, потім повтори `npm install` / `npm run tauri dev`. Альтернатива без зміни політики — запускати ті самі команди через `cmd.exe` замість PowerShell.
