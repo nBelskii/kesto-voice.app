@@ -11,7 +11,8 @@ export type Screen =
   | 'screenshare'
   | 'incoming'
   | 'settings'
-  | 'about';
+  | 'about'
+  | 'directtest';
 
 export type Theme = 'dark' | 'light' | 'glass';
 

@@ -13,6 +13,7 @@ import { ScreenShareView } from './screens/ScreenShareView';
 import { Incoming } from './screens/Incoming';
 import { Settings } from './screens/Settings';
 import { About } from './screens/About';
+import { DirectTest } from './screens/DirectTest';
 import { ChatPanel, type ChatThread } from './components/ChatPanel';
 import { UpdateBanner } from './components/UpdateBanner';
 import { useCall } from './webrtc/useCall';
@@ -277,6 +278,9 @@ export default function App() {
       break;
     case 'about':
       screenEl = <About theme={settings.theme} onToggleTheme={toggleTheme} onNavigate={setScreen} />;
+      break;
+    case 'directtest':
+      screenEl = <DirectTest onBack={() => setScreen('about')} />;
       break;
     default:
       screenEl = null;

@@ -23,6 +23,9 @@ export function About({ theme, onToggleTheme, onNavigate }: Props) {
               <a href="#" className="ab-link">Privacy</a>
               <a href="#" className="ab-link">Changelog</a>
             </div>
+            <button className="btn-o" style={{ marginTop: 24 }} onClick={() => onNavigate('directtest')}>
+              🔧 Direct P2P Test (diagnostic, no Steam)
+            </button>
           </div>
         </div>
       </div>
